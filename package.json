@@ -5,13 +5,18 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "wdio": "wdio run ./wdio.conf.js"
+    "wdio": "wdio run ./wdio.conf.js",
+    "allure-generate": "npx allure generate --output reports/allure-report reports/allure-results",
+    "allure-open": "npx allure open reports/allure-report",
+    "allure": "npm run allure-generate && npm run allure-open",
+    "wdio-with-report": "wdio run ./wdio.conf.js && npm run allure"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@wdio/allure-reporter": "^9.26.1",
     "@wdio/appium-service": "^9.26.1",
     "@wdio/cli": "^9.26.1",
     "@wdio/local-runner": "^9.26.1",

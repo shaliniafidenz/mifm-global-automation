@@ -22,7 +22,7 @@ exports.config = {
     // of the config file unless it's absolute.
     //
     specs: [
-        // ToDo: define location for spec files here
+        './test/e2e/*.e2e.js'
     ],
     // Patterns to exclude.
     exclude: [
@@ -58,8 +58,8 @@ exports.config = {
         'appium:automationName': 'UiAutomator2',
         'appium:noReset': true,
         'appium:newCommandTimeout': 3600,
-        'appium:appPackage': 'com.expandtesting.practice',
-        'appium:appActivity': 'com.expandtesting.practice.MainActivity'
+        'appium:appPackage': 'com.certisgroup.mifmv2',
+        'appium:appActivity': 'com.certisgroup.mifmv2.MainActivity'
     }],
 
     //
@@ -132,13 +132,23 @@ exports.config = {
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: https://webdriver.io/docs/dot-reporter
-    reporters: ['spec'],
+    reporters: [
+        'spec',
+        [
+            'allure',
+            {
+                outputDir: 'reports/allure-results',
+                disableWebdriverStepsReporting: false,
+                disableWebdriverScreenshotsReporting: false,
+            }
+        ]
+    ],
 
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 60000
+        timeout: 120000
     },
 
     //
@@ -235,8 +245,11 @@ exports.config = {
      * @param {boolean} result.passed    true if test has passed, otherwise false
      * @param {object}  result.retries   information about spec related retries, e.g. `{ attempts: 0, limit: 0 }`
      */
-    // afterTest: function(test, context, { error, result, duration, passed, retries }) {
-    // },
+     afterTest: async function(test, context, { error }) {
+        if(error){
+            await browser.takeScreenshot();
+        }
+     },
 
 
     /**
