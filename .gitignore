@@ -5,4 +5,4 @@ allure-results
 logs
 screenshots
 .env
-apps
+*.apk
