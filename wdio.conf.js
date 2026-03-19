@@ -56,10 +56,12 @@ exports.config = {
         'appium:deviceName': 'R58M81ZYXKH',
         'appium:platformVersion': '11',
         'appium:automationName': 'UiAutomator2',
-        'appium:noReset': true,
-        'appium:newCommandTimeout': 3600,
         'appium:appPackage': 'com.certisgroup.mifmv2',
-        'appium:appActivity': 'com.certisgroup.mifmv2.MainActivity'
+        'appium:appActivity': 'com.certisgroup.mifmv2.MainActivity',
+        'appium:appWaitActivity': 'com.certisgroup.mifmv2.MainActivity',
+        'appium:noReset': true,
+        'appium:autoGrantPermissions': true
+        
     }],
 
     //
@@ -109,7 +111,7 @@ exports.config = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: ['appium', 'visual'],
+    services: ['appium'],
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
@@ -203,8 +205,10 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {object}         browser      instance of created browser/device session
      */
-    // before: function (capabilities, specs) {
-    // },
+     before: async function (capabilities, specs) {
+        console.log('Session Started');
+        console.log('Capabilities:', browser.capabilities);
+     },
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {string} commandName hook command name

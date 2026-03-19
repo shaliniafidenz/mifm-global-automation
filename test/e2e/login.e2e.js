@@ -7,11 +7,11 @@ describe('Login E2E Tests', ()=>{
     it('TC_LOGIN_001: Verify user can login with valid credentials', async ()=>{
 
         allure.addFeature('Login');
-        allure.addSeverity('critical');
+        allure.addSeverity('Critical');
 
-        const appId = driver.capabilities.appPackage;
-        await driver.execute('mobile: activateApp', { appId: appId });
-        await browser.pause(2000);
+        //const appId = driver.capabilities.appPackage;
+        //await driver.execute('mobile: activateApp', { appId: appId });
+        
 
         const homeTitle = await loginFlow.loginAndGetHomeTitle(
             loginData.validUser.username,
