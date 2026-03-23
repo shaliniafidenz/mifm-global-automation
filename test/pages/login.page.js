@@ -6,6 +6,7 @@ class LoginPage{
     get passwordField(){ return $('android=new UiSelector().resourceId("password")');}
     get loginButton(){ return $('android=new UiSelector().resourceId("kc-login")');}
     get homeTitle(){ return $('android=new UiSelector().resourceId("dashboard_title_label")');}
+    get loader(){ return $('android=new UiSelector().resourceId("dashboard_loader")');}
 
     async enterUsername(username){
         //await this.usernameField.setValue(username);

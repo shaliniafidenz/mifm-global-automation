@@ -44,7 +44,7 @@ exports.config = {
     // and 30 processes will get spawned. The property handles how many capabilities
     // from the same test should run tests.
     //
-    maxInstances: 10,
+    maxInstances: 1,//10,
     //
     // If you have trouble getting all important capabilities together, check out the
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
@@ -60,7 +60,10 @@ exports.config = {
         'appium:appActivity': 'com.certisgroup.mifmv2.MainActivity',
         'appium:appWaitActivity': 'com.certisgroup.mifmv2.MainActivity',
         'appium:noReset': true,
-        'appium:autoGrantPermissions': true
+        'appium:autoGrantPermissions': true,
+        'appium:newCommandTimeout': 300,
+        'appium:adbExecTimeout': 120000,
+        'appium:appWaitDuration': 120000
         
     }],
 
@@ -111,7 +114,18 @@ exports.config = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: ['appium'],
+    services: [
+        ['appium', {
+            command: 'appium',
+            args: {
+            address: '127.0.0.1',
+            port: 4723
+            },
+            logPath: './logs',
+            waitStartTime: 5000, // 👈 add this (5 seconds)
+            waitStartInterval: 1000
+        }]
+    ],
 
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
@@ -150,7 +164,7 @@ exports.config = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 120000
+        timeout: 200000 // Set timeout to 4 minutes to accommodate for appium interactions
     },
 
     //
@@ -205,10 +219,12 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {object}         browser      instance of created browser/device session
      */
+    /*
      before: async function (capabilities, specs) {
         console.log('Session Started');
         console.log('Capabilities:', browser.capabilities);
      },
+     */
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {string} commandName hook command name

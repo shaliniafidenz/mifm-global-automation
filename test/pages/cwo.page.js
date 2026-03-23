@@ -2,7 +2,7 @@ const action = require('../utils/action.utils');
 
 class CWOPage{
 
-    get cwoTitle(){ return $('android=new UiSelector().resourceId("dashboard_title_label")');}
+    get cwoTitle(){ return $('android=new UiSelector().resourceId("cwo_title_label")');}
     get cwoCreateButton(){ return $('android=new UiSelector().resourceId("create_cwo_button")');}
 
     async getCWOTitle(){
@@ -14,3 +14,5 @@ class CWOPage{
     }
 
 }
+
+module.exports = new CWOPage();

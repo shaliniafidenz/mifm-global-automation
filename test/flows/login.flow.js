@@ -2,6 +2,7 @@ const loginPage = require('../pages/login.page');
 
 class LoginFlow {
     async login(username, password){
+ 
         await loginPage.enterUsername(username);
         await loginPage.tapLogin();
 
@@ -11,6 +12,14 @@ class LoginFlow {
 
     async loginAndGetHomeTitle(username, password){
         await this.login(username, password);
+        
+        //await loginPage.homeTitle.waitForDisplayed({ timeout: 60000 });
+        
+        return await loginPage.getHomeTitle();
+    }
+
+    async getHomeTitle(){
+        //await this.login(username, password);
         
         //await loginPage.homeTitle.waitForDisplayed({ timeout: 60000 });
         
