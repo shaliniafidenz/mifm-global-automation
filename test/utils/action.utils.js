@@ -21,6 +21,19 @@ class ActionUtils{
         const value = await element.getAttribute('content-desc');
         return value.split('\n')[1]; // get only visible text
     }
+
+    async isDisplayed(element){
+        try{
+            await waitUtils.waitForDisplayed(element);
+            return await element.isDisplayed();
+        }
+        catch(error){
+            console.error('Error checking if element is displayed:', error);
+            return false;
+        }
+    }
+
+    
 }
 
 module.exports = new ActionUtils();

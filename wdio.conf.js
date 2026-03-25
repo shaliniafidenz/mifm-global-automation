@@ -27,6 +27,7 @@ exports.config = {
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
+        //'./test/e2e/login.e2e.js'
     ],
     //
     // ============
@@ -63,7 +64,9 @@ exports.config = {
         'appium:autoGrantPermissions': true,
         'appium:newCommandTimeout': 300,
         'appium:adbExecTimeout': 120000,
-        'appium:appWaitDuration': 120000
+        'appium:appWaitDuration': 120000,
+        'appium:uiautomator2ServerLaunchTimeout': 120000,
+        'appium:fullReset': false
         
     }],
 
@@ -219,12 +222,12 @@ exports.config = {
      * @param {Array.<String>} specs        List of spec file paths that are to be run
      * @param {object}         browser      instance of created browser/device session
      */
-    /*
-     before: async function (capabilities, specs) {
-        console.log('Session Started');
-        console.log('Capabilities:', browser.capabilities);
-     },
-     */
+    
+     /*before: async function (capabilities, specs) {
+        await driver.terminateApp(capabilities['appium:appPackage']);
+        await driver.activateApp(capabilities['appium:appPackage']);
+     },*/
+     
     /**
      * Runs before a WebdriverIO command gets executed.
      * @param {string} commandName hook command name

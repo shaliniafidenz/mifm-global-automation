@@ -6,7 +6,7 @@ class WaitUtils{
             timeoutMsg: 'Element not displayed after ' + timeout + ' ms'
         });
 
-        await element.waitForExist({ timeout });
+       // await element.waitForExist({ timeout });
     }
 
     async waitForClickable(element, timeout=10000){

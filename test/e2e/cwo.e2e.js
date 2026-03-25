@@ -1,5 +1,7 @@
 const dashboardFlow = require('../flows/dashboard.flow');
 const cwoFlow = require('../flows/cwo.flow');
+const cwoPage = require('../pages/cwo.page');
+const commonPage = require('../pages/common.page');
 const cwoData = require('../fixtures/cwo.data');
 const session = require('../flows/session.flow');
 const allure = require('@wdio/allure-reporter').default;
@@ -7,6 +9,7 @@ const allure = require('@wdio/allure-reporter').default;
 describe('CWO E2E Tests', ()=>{
 
     before(async()=>{
+        //await session.ensureAppReady();
         await session.loginIfNeeded();
     })
 
@@ -51,4 +54,32 @@ describe('CWO E2E Tests', ()=>{
         await dashboardFlow.navigateToDashboardFromFooterMenu();
        
     });
+
+    it('TC_CWO_004: Create a new CWO', async()=>{
+        allure.addFeature('CWO');
+        allure.addSeverity('Critiical');
+        allure.addTag('smoke');  
+        allure.addTag('regression');
+
+
+        await cwoFlow.navigateToCWOFromBottomNav();
+
+        //Assert Create CWO Button is visible
+        const isCWOCreateButtonVisible = await cwoPage.isCWOCreateButtonVisible();
+        expect(isCWOCreateButtonVisible).toBe(true);
+
+        //Create CWO if the button is visible
+        if(isCWOCreateButtonVisible){
+           
+            const cwoDetailsHeader = await cwoFlow.createCWO();
+            console.log('CWO Details Header Text:', cwoDetailsHeader);
+
+            expect(cwoDetailsHeader[1]).toContain('CWO'); // Adjust index based on actual header text format
+            expect(cwoDetailsHeader[3]).toContain('NEW'); // Adjust index based on actual header text format
+
+            await commonPage.tapBack();
+            await dashboardFlow.navigateToDashboardFromFooter();
+        }  
+        
+    }); 
 });

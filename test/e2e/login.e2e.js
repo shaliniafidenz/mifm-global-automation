@@ -6,7 +6,8 @@ const allure = require('@wdio/allure-reporter').default;
 describe('Login E2E Tests', ()=>{
 
     before(async()=>{
-            await session.loginIfNeeded();
+      //  await session.ensureAppReady();
+        await session.loginIfNeeded();
     })
 
     it('TC_LOGIN_001: Verify user can login with valid credentials', async ()=>{
