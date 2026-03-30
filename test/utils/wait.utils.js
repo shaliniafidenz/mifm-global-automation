@@ -9,6 +9,14 @@ class WaitUtils{
        // await element.waitForExist({ timeout });
     }
 
+    async waitToDisappear(element, timeout){
+        await element.waitForDisplayed({
+            reverse: true,
+            timeout: timeout,
+            timeoutMsg: 'Element still displayed after ' + timeout + ' ms'
+        });
+    }
+
     async waitForClickable(element, timeout=10000){
         await element.waitForClickable({
             timeout,
@@ -16,15 +24,7 @@ class WaitUtils{
         })
     }
 
-    async waitForText(element, expectedText, timeout=10000){
-        await browser.waitUntil(async() => {
-            const text = await element.getText();
-            return text.includes(expectedText);
-        }, {
-            timeout,
-            timeoutMsg: 'Expected text "' + expectedText + '" not found after ' + timeout + ' ms'
-        });
-    }
+
 }
 
 module.exports = new WaitUtils();

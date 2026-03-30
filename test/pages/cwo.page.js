@@ -31,7 +31,7 @@ class CWOPage{
     get cwoDetailsHeader(){ return $('android=new UiSelector().resourceId("cwoItemDetailAppBar_view_text_02")');}
 
     async getCWOTitle(){
-        return await action.getText(this.cwoTitle);
+        return await action.getTextMultiPart(this.cwoTitle);
     }
 
     async tapCreateCWO(){

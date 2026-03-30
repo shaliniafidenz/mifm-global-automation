@@ -12,6 +12,8 @@ class CommonPage{
     
     async waitForLoaderToDisappear(timeout = 10000){
         try{
+            await waitUtils.waitForDisplayed(this.loader);
+
             await this.loader.waitForDisplayed({
                 reverse: true,
                 timeout: timeout,
@@ -48,6 +50,30 @@ class CommonPage{
 
         await action.click(matches[index]);
     }
+
+    async selectRandomOption(elements, option){
+        const matches = [];
+
+        for(let el of elements){
+            const desc = await el.getAttribute('content-desc');
+
+            if(!desc){
+                continue;
+            }
+            else{
+                matches.push(el);
+            }
+        }
+        
+        if(matches.length == 0){
+            throw new Error(`No elements found with option ${option}`);
+        }
+
+        const randomIndex = Math.floor(Math.random() * matches.length);
+        await action.click(matches[randomIndex]);
+    }
+
+    
 
     async getWOHeaderText(element){
         await waitUtils.waitForDisplayed(element);

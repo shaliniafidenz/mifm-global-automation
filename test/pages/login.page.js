@@ -1,10 +1,14 @@
 const action = require('../utils/action.utils');
+const waitUtils = require('../utils/wait.utils');
 
 class LoginPage{
 
     get usernameField(){return $('android=new UiSelector().resourceId("username")');}
     get passwordField(){ return $('android=new UiSelector().resourceId("password")');}
     get loginButton(){ return $('android=new UiSelector().resourceId("kc-login")');}
+    get errorMessageUsername(){ return $('android=new UiSelector().resourceId("input-error-username")');}
+    get errorMessagePassword(){ return $('android=new UiSelector().resourceId("input-error-password")');}
+    get goBackButton(){ return $('android=new UiSelector().resourceId("reset-login")');}
     get homeTitle(){ return $('android=new UiSelector().resourceId("dashboard_title_label")');}
     get loader(){ return $('android=new UiSelector().resourceId("dashboard_loader")');}
 
@@ -23,8 +27,41 @@ class LoginPage{
     }
 
     async getHomeTitle(){
-        return await action.getText(this.homeTitle);
+        return await action.getTextMultiPart(this.homeTitle);
     }
+
+    async getUsernameErrorMessage(){
+        return await action.getText(this.errorMessageUsername);
+        
+    }
+
+    async getPasswordErrorMessage(){
+        return await action.getText(this.errorMessagePassword);
+    }
+
+    async isLoginButtonVisible(){
+        return await action.isDisplayed(this.loginButton);
+    }
+
+    async isUsernameVisible(){
+        return await action.isDisplayed(this.usernameField);
+    }
+    async isPasswordVisible(){
+        return await action.isDisplayed(this.passwordField);
+    }
+   
+    async isUsernameErrorMessageVisible(){
+        return await action.isDisplayed(this.errorMessageUsername);
+    }
+
+    async isPasswordErrorMessageVisible(){
+        return await action.isDisplayed(this.errorMessagePassword);
+    }
+
+    async resetLogin(){
+        await action.click(this.goBackButton);
+    }
+
 }
 
 module.exports = new LoginPage();

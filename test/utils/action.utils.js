@@ -13,13 +13,23 @@ class ActionUtils{
         await element.setValue(text);
     }
 
-    async getText(element){
+    async getTextMultiPart(element){
         await waitUtils.waitForDisplayed(element);
         //return await element.getText();
         //return await element.getAttribute('content-desc');
 
         const value = await element.getAttribute('content-desc');
         return value.split('\n')[1]; // get only visible text
+    }
+
+    async getText(element){
+        await waitUtils.waitForDisplayed(element);
+        let value = await element.getAttribute('content-desc');
+
+        if(!value){
+            value = await element.getText();
+        }
+        return value;
     }
 
     async isDisplayed(element){
