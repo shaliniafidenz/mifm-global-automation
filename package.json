@@ -1,15 +1,16 @@
 {
   "name": "mifm-global",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "wdio": "wdio run ./wdio.conf.js",
+    "clean-allure": "rimraf reports/allure-results reports/allure-report reports/.allure",
     "allure-generate": "npx allure generate --output reports/allure-report reports/allure-results",
     "allure-open": "npx allure open reports/allure-report",
     "allure": "npm run allure-generate && npm run allure-open",
-    "wdio-with-report": "wdio run ./wdio.conf.js && npm run allure"
+    "wdio-with-report": "npm run clean-allure && wdio run ./wdio.conf.js && npm run allure"
   },
   "keywords": [],
   "author": "",

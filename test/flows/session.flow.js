@@ -43,8 +43,9 @@ class SessionFlow{
 
     async isDashboardDisplayed(){
         try{
-            await waitUtils.waitForDisplayed(footerPage.homeFooterIcon);
-            return await footerPage.homeFooterIcon.isDisplayed();
+            let homeFooterIcon = await footerPage.homeFooterIcon;
+            //await waitUtils.waitForDisplayed(homeFooterIcon);
+            return await action.isDisplayed(homeFooterIcon);
         }
         catch(error){
             console.error('Error checking if dashboard is displayed:', error);

@@ -19,7 +19,6 @@ describe('Login E2E Tests', ()=>{
 
         //This will cover TC_LOGIN_001, TC_LOGIN_002
         //logout if already logged in, to ensure we are on login page for negative tests
-        
         await loginFlow.logout();
 
         await browser.pause(5000); // Pause to allow logout to complete and login page to load. Temporary solution.
@@ -36,8 +35,7 @@ describe('Login E2E Tests', ()=>{
             
             expect(emptyUsernameResult.userNameVisible).toBe(true);
             expect(emptyUsernameResult.errorMessageVisible).toBe(true);
-            expect(emptyUsernameResult.errorMessage).toContain('Invalid username or email');
-            
+            expect(emptyUsernameResult.errorMessage).toContain('Invalid username or email');          
 
             //TC_LOGIN_002: Invalid username
             const invalidUsernameResult = await loginFlow.loginWithInvalidUsername();
@@ -74,15 +72,15 @@ describe('Login E2E Tests', ()=>{
                 //TC_LOGIN_003: Empty password
                 const emptyPasswordResult = await loginFlow.loginWithEmptyPassword();
                 expect(emptyPasswordResult.passwordVisible).toBe(true);
-                    expect(emptyPasswordResult.errorMessageVisible).toBe(true);
-                    expect(emptyPasswordResult.errorMessage).toContain('Invalid password');
+                expect(emptyPasswordResult.errorMessageVisible).toBe(true);
+                expect(emptyPasswordResult.errorMessage).toContain('Invalid password');
                 
 
                 //TC_LOGIN_004: Invalid password
                 const invalidPasswordResult = await loginFlow.loginWithInvalidPassword();
-                    expect(invalidPasswordResult.passwordVisible).toBe(true);
-                    expect(invalidPasswordResult.errorMessageVisible).toBe(true);
-                    expect(invalidPasswordResult.errorMessage).toContain('Invalid password');
+                expect(invalidPasswordResult.passwordVisible).toBe(true);
+                expect(invalidPasswordResult.errorMessageVisible).toBe(true);
+                expect(invalidPasswordResult.errorMessage).toContain('Invalid password');
                
             }
             else{

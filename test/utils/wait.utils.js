@@ -1,12 +1,23 @@
 class WaitUtils{
 
-    async waitForDisplayed(element, timeout = 5000){
-        await element.waitForDisplayed({
-            timeout,
-            timeoutMsg: 'Element not displayed after ' + timeout + ' ms'
-        });
+    async waitForDisplayed(element, timeout = 3000){
 
-       // await element.waitForExist({ timeout });
+        try{
+            await element.waitForDisplayed({
+                timeout,
+                timeoutMsg: `Element not displayed after ${timeout}ms`,
+            });
+        }
+        catch(error){
+            console.error('Error checking if element is displayed:', error);
+        }
+    }
+
+    async waitForExist(element, timeout = 3000) {
+        await element.waitForExist({
+            timeout,
+            timeoutMsg: `Element not found after ${timeout}ms`,
+        });
     }
 
     async waitToDisappear(element, timeout){

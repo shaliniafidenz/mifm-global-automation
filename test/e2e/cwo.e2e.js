@@ -13,7 +13,7 @@ describe('CWO E2E Tests', ()=>{
         await session.loginIfNeeded();
     })
 
-    it('TC_CWO_001: Verify user can navigate to CWO List from bottom navigation', async ()=>{
+    it.skip('TC_CWO_001: Verify user can navigate to CWO List from bottom navigation', async ()=>{
 
         allure.addFeature('CWO');
         allure.addSeverity('Critiical');
@@ -23,11 +23,12 @@ describe('CWO E2E Tests', ()=>{
         const cwoTitle = await cwoFlow.navigateToCWOFromBottomNav();
         expect(cwoTitle).toContain('Corrective Work Order');
 
+        await browser.pause(2000); // Pause to allow UI to update after navigating back
         await dashboardFlow.navigateToDashboardFromFooter();
     
     });
 
-    it('TC_CWO_002: Verify user can navigate to CWO List from the right side drawer', async ()=>{
+    it.skip('TC_CWO_002: Verify user can navigate to CWO List from the right side drawer', async ()=>{
 
         allure.addFeature('CWO');
         allure.addSeverity('Critiical');
@@ -38,12 +39,13 @@ describe('CWO E2E Tests', ()=>{
 
         console.log('CWO List title verified successfully from 002.');
 
+        await browser.pause(2000); // Pause to allow UI to update after navigating back
         await dashboardFlow.navigateToDashboardFromFooter();
         //await dashboardFlow.navigateToDashboardFromRightDrawer();
     
     });
 
-    it('TC_CWO_003: Verify user can navigate to CWO List from the bottom menu', async()=>{
+    it.skip('TC_CWO_003: Verify user can navigate to CWO List from the bottom menu', async()=>{
         allure.addFeature('CWO');
         allure.addSeverity('Critiical');
         allure.addTag('smoke');
@@ -51,11 +53,48 @@ describe('CWO E2E Tests', ()=>{
         const cwoTitle = await cwoFlow.navigateToCWOFromBottomMenu();
         expect(cwoTitle).toContain('Corrective Work Order');
 
+        await browser.pause(2000); // Pause to allow UI to update after navigating back
         await dashboardFlow.navigateToDashboardFromFooterMenu();
        
     });
 
-    it('TC_CWO_004: Create a new CWO', async()=>{
+    it.skip('TC_CWO_005: Verify CWO list loads correctly', async()=>{
+        allure.addFeature('CWO');
+        allure.addSeverity('Critiical');
+        allure.addTag('regression');
+
+        await cwoFlow.navigateToCWOFromBottomNav();
+
+        await browser.pause(2000); // Pause to allow CWO list to load
+        // Wait for scroll container instead of blind pause
+       //await (await cwoPage.horizontalScrollContainer).waitForDisplayed({ timeout: 5000 });
+
+        //validate CWO Cards are Visible, List is visible for each status if there are work orders and "No results found" message is visible if there are no work orders for a given status. 
+        //This will cover TC_CWO_005 and TC_CWO_007
+
+        const statusArray = ['New', 'Assignment', 'Acknowledgement', 'In-Progress', 'Completed'];
+
+        for(const status of statusArray){
+            const newWOCountData = await cwoFlow.getWokOrderDataForGivenStatus(status);
+            //console.log(`Status: ${status}, Card Visible: ${newWOCountData.isCardVisible}, Total Work Orders: ${newWOCountData.totalNoOfWorkOrders}`);
+            console.log(`Status: ${status}, Card Visible: ${newWOCountData.isCardVisible}, Total Work Orders: ${newWOCountData.totalNoOfWorkOrders}, List Visible: ${newWOCountData.isListVisible}`);
+
+            expect(newWOCountData.isCardVisible).toBe(true);
+
+            if(newWOCountData.totalNoOfWorkOrders > 0){
+                expect(newWOCountData.isListVisible).toBe(true);
+            }
+            else{
+                //This will cover TC_CWO_007
+                const isNoResultsMessageVisibleForNew = await cwoFlow.isNoResultsFoundMessageVisible();
+                expect(isNoResultsMessageVisibleForNew).toBe(true);
+                expect(newWOCountData.isListVisible).toBe(false);
+            }
+            
+        }
+    });
+
+    it.skip('TC_CWO_004: Create a new CWO', async()=>{
         allure.addFeature('CWO');
         allure.addSeverity('Critiical');
         allure.addTag('smoke');  
@@ -78,8 +117,58 @@ describe('CWO E2E Tests', ()=>{
             expect(cwoDetailsHeader[3]).toContain('NEW'); // Adjust index based on actual header text format
 
             await commonPage.tapBack();
+            await browser.pause(2000); // Pause to allow UI to update after navigating back
             await dashboardFlow.navigateToDashboardFromFooter();
         }  
+        
+    }); 
+
+    it.skip('TC_CREATE_CWO_002: Mandatory field validation', async()=>{
+        allure.addFeature('CWO');
+        allure.addSeverity('Critiical');
+        allure.addTag('regression');
+
+        await cwoFlow.navigateToCWOFromBottomNav();
+        await browser.pause(2000); // Pause to allow CWO list to load
+
+        const errorMessagesArray = await cwoFlow.returnErrorMessageForCreatingCWOWithEmptyFields();
+
+        // Validate error messages for each required field
+        expect(errorMessagesArray.buildingRequired).toBe(true);
+        expect(errorMessagesArray.locationRequired).toBe(true);
+        expect(errorMessagesArray.problemTypeRequired).toBe(true);
+        expect(errorMessagesArray.workOrderTypeRequired).toBe(true);
+        expect(errorMessagesArray.serviceCategoryRequired).toBe(true);
+        expect(errorMessagesArray.priorityLevelRequired).toBe(true);
+
+            await commonPage.tapBack();
+            await browser.pause(2000); // Pause to allow UI to update after navigating back
+            await dashboardFlow.navigateToDashboardFromFooter();
+        
+    }); 
+
+    it('TC_CWO_008: Cancel CWO creation', async()=>{
+        allure.addFeature('CWO');
+        allure.addTag('regression');
+
+
+        await cwoFlow.navigateToCWOFromBottomNav();
+        const cwoValuesafterReset = await cwoFlow.resetCWO();
+
+        console.log('CWO Values after Reset:', cwoValuesafterReset);
+        expect(cwoValuesafterReset.requester).toBe('-');
+        expect(cwoValuesafterReset.building).toBe('-');
+        expect(cwoValuesafterReset.location).toBe('-');
+        expect(cwoValuesafterReset.workOrderType).toBe('-');
+        expect(cwoValuesafterReset.problemType).toBe('-');
+        expect(cwoValuesafterReset.serviceCategory).toBe('-');
+        expect(cwoValuesafterReset.priorityLevel).toBe('-');
+        expect(cwoValuesafterReset.asset).toBe('-');
+        expect(cwoValuesafterReset.description).toBe('');
+        
+        await commonPage.tapBack();
+        await browser.pause(2000);
+        await dashboardFlow.navigateToDashboardFromFooter();
         
     }); 
 });

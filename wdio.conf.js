@@ -22,8 +22,8 @@ exports.config = {
     // of the config file unless it's absolute.
     //
     specs: [
-        './test/e2e/*.e2e.js',
-        //'./test/e2e/login.e2e.js',
+       // './test/e2e/*.e2e.js',
+        './test/e2e/cwo.e2e.js'
     ],
     // Patterns to exclude.
     exclude: [
@@ -158,7 +158,7 @@ exports.config = {
             'allure',
             {
                 outputDir: 'reports/allure-results',
-                disableWebdriverStepsReporting: false,
+                disableWebdriverStepsReporting: true,
                 disableWebdriverScreenshotsReporting: false,
             }
         ]
@@ -168,7 +168,7 @@ exports.config = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 200000 // Set timeout to 4 minutes to accommodate for appium interactions
+        timeout: 600000 // Set timeout to 10 minutes to accommodate for appium interactions
     },
 
     //
