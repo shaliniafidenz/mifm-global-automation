@@ -3,7 +3,7 @@ const waitUtils = require('./wait.utils');
 class ActionUtils{
 
     async click(element, timeout = 2000){
-        await element.waitForDisplayed({ timeout });
+        await waitUtils.waitForDisplayed(element);
         await element.click();
     }
 

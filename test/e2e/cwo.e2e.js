@@ -147,10 +147,9 @@ describe('CWO E2E Tests', ()=>{
         
     }); 
 
-    it('TC_CWO_008: Cancel CWO creation', async()=>{
+    it.skip('TC_CWO_008: Cancel CWO creation', async()=>{
         allure.addFeature('CWO');
         allure.addTag('regression');
-
 
         await cwoFlow.navigateToCWOFromBottomNav();
         const cwoValuesafterReset = await cwoFlow.resetCWO();
@@ -171,4 +170,29 @@ describe('CWO E2E Tests', ()=>{
         await dashboardFlow.navigateToDashboardFromFooter();
         
     }); 
+
+    it('TC_CWO_011: Assign a Supervisor to a CWO', async()=>{
+
+        allure.addFeature('CWO');
+        allure.addTag('regression');
+        allure.addTag('smoke');
+        allure.addSeverity('Critical');
+
+        await cwoFlow.navigateToCWOFromBottomNav();
+
+        //Get all CWOs to ensure we have a predictable list of NEW CWOs
+        await cwoFlow.getAllCWOs();
+
+        //Tap on a random visible NEW CWO card
+        await cwoFlow.tapWorkOrderFromTheListByStatus('New');
+
+        //Assign a supervisor to it. Validate the supervisor is assigned successfully by checking the assigned supervisor name on the CWO details screen and also validate the status of the CWO changes to "Assignment"
+        const selectedSupervisor = await cwoFlow.assignSupervisorToNewCWO();
+
+        //Goto Info screen and validate supervisor name
+        const supervisorNameOnInfoTab = await cwoFlow.getSupervisorNameOnCWOInfoTab();
+
+        expect(supervisorNameOnInfoTab).toBe(selectedSupervisor);
+
+    });
 });

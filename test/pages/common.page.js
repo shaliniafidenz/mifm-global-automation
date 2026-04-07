@@ -76,7 +76,6 @@ class CommonPage{
         const elements = await $$(selector);
 
         console.log(`Selecting random option from ${elements.length} elements`);
-        console.log(`Elements: ${elements}`);
       //  const matches = [];
 
         const randomIndex = Math.floor(Math.random() * elements.length);

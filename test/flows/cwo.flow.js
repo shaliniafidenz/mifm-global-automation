@@ -129,6 +129,13 @@ class CWOFlow{
         return await cwoPage.isNoResultsFoundMessageVisible();
     }
 
+    async getAllCWOs(){
+        await cwoPage.tapFilterButton();
+        await cwoPage.tapAssignedToToggle('All');
+        await cwoPage.tapApplyFilterButton();
+        await browser.pause(3000); // Pause to allow the list to refresh with all CWOs
+    }
+
     async isNewCardVisibleInCWOList(){
         return await cwoPage.isCWOStatusCardVisible('New');
     }
@@ -171,8 +178,7 @@ class CWOFlow{
     async getWokOrderDataForGivenStatus(status){
         // Implementation for checking if the list is visible for a specific status, WO count, and returning the data in an object
         
-        let element, isCardVisible, totalNoOfWorkOrders, isListVisible;
-      
+        let element, isCardVisible, totalNoOfWorkOrders, isListVisible; 
 
         switch (status) {
             case 'New':
@@ -225,6 +231,64 @@ class CWOFlow{
         }
 
         return { isCardVisible, totalNoOfWorkOrders, isListVisible };
+    }
+
+    async tapWorkOrderFromTheListByStatus(status){
+        // Implementation for tapping any visible work order card for a given status
+        let cardElement;
+        let listItemsElements;
+
+        switch (status) {
+            case 'New':
+                cardElement = await cwoPage.newCard;
+                listItemsElements = cwoPage.newWOListItems;
+                break;
+            default:
+                throw new Error(`Unsupported CWO status for tapping work order card: ${status}`);
+        }
+
+        await action.click(cardElement); // Click on the status card to view the list
+        await browser.pause(2000);
+        const totalNoOfWorkOrders = await cwoPage.getTotalWOCount(cardElement);
+
+        if(totalNoOfWorkOrders > 0){
+            // Tap on a random work order from the list
+            await commonPage.selectRandomOption(listItemsElements);
+            await browser.pause(2000);
+        }
+        else{
+            throw new Error(`No work orders available for status: ${status}`);
+        }
+    }
+
+    async assignSupervisorToNewCWO(){
+
+        //Find the Supervisor element and apply filters to load supervisors in the dropdown, then select a random supervisor from the list and assign to the CWO
+        await cwoPage.tapSupervisorSelectAllFilter();
+        await cwoPage.tapSupervisorIgnoreSkillsFilter();
+        await cwoPage.tapSupervisorDropdown();
+        await browser.pause(7000);
+        await commonPage.selectRandomOption(cwoPage.cwoSupervisorDropdownItems);
+
+        const supervisorName = (await action.getContentDescription(cwoPage.cwoSupervisorDropdown)).split('\n')[2];;
+        console.log(`Selected Supervisor: ${supervisorName}`);
+        await cwoPage.tapAssignButton();
+    
+        //Asserting the Please Wait banner and Success Message after assigning supervisor to the CWO
+        //For Now I'm keeping a blind wait after tapping assign button to wait for the Please Wait banner to appear and disappear as I'm facing issues in locating the banner element. Will replace the blind wait with an explicit wait once the locator issue is resolved.
+        await browser.pause(5000);
+        
+        return supervisorName;
+    }
+
+    async getSupervisorNameOnCWOInfoTab(){
+
+        //Goto Info screen and validate supervisor name
+        await cwoPage.tapInfoTab();
+        await browser.pause(2000);
+        const supervisorNameOnInfoTab = (await action.getText(cwoPage.cwoInfoSupervisorValue)).split('\n')[1];
+        return supervisorNameOnInfoTab;
+
     }
 
     

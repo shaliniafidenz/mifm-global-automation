@@ -56,11 +56,11 @@ class CWOPage{
     get completedWOFirstListItem()       { return $('android=new UiSelector().resourceId("cwo_completed_list_item_01")'); }
 
     //Full list — reserved for future test cases that need all items
-    get newWOListItems(){ return $$('android=new UiSelector().resourceIdMatches("cwo_new_list_item.*")');}
-    get assignmentWOListItems(){ return $$('android=new UiSelector().resourceIdMatches("cwo_assignment_list_item.*")');}
-    get acknowledgementWOListItems(){ return $$('android=new UiSelector().resourceIdMatches("cwo_acknowledgement_list_item.*")');}
-    get inProgressWOListItems(){ return $$('android=new UiSelector().resourceIdMatches("cwo_inprogress_list_item.*")');}
-    get completedWOListItems(){ return $$('android=new UiSelector().resourceIdMatches("cwo_completed_list_item.*")');}
+    get newWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_new_list_item_.*")';}
+    get assignmentWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_assignment_list_item_.*")';}
+    get acknowledgementWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_acknowledgement_list_item_.*")';}
+    get inProgressWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_inprogress_list_item_.*")';}
+    get completedWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_completed_list_item_.*")';}
 
     get horizontalScrollContainer() {return $('//android.widget.HorizontalScrollView');}
   
@@ -158,7 +158,36 @@ class CWOPage{
         '.scrollIntoView(new UiSelector().resourceId("cwo_create_priorityLevel_required_error"))'); 
     }
 
+    //CWO Details elements
     get cwoDetailsHeader(){ return $('android=new UiSelector().resourceId("cwoItemDetailAppBar_view_text_02")');}
+
+    get cwoSupervisorSelectAllFilter(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("skillSelector_button_01"))'); 
+    }
+
+    get cwoSupervisorIgnoreSkillsFilter(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("skillSelector_button_02"))'); 
+    }
+
+    get cwoSupervisorDropdown(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("cwo_checklist_new_supervisor_dropdown"))'); 
+    }
+
+    get cwoSupervisorDropdownItems(){ return 'android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceIdMatches(".*cwo_checklist_new_supervisor_dropdown_list_item_.*"))'; 
+    }
+
+    get cwoAssignButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("cwo_checklist_new_assign_button"))'); 
+    }
+
+    get cwoInfoTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Information_tab")');}
+
+    get cwoInfoSupervisorValue(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_supervisor_value"))'); 
+    }
+
+    
 
     async getCWOTitle(){
         return await action.getTextMultiPart(this.cwoTitle);
@@ -307,7 +336,6 @@ class CWOPage{
 
         //console.log(`Total count extracted for status card: ${totalCount}`);
         return parseInt(totalCount);
-
     }
 
     async getCWOListCountByStatus(items){
@@ -360,6 +388,25 @@ class CWOPage{
 
     }
 
+    async tapSupervisorSelectAllFilter(){
+        await action.click(this.cwoSupervisorSelectAllFilter);
+    }
+
+    async tapSupervisorIgnoreSkillsFilter(){
+        await action.click(this.cwoSupervisorIgnoreSkillsFilter);
+    }
+
+    async tapSupervisorDropdown(){
+        await action.click(this.cwoSupervisorDropdown);
+    }
+
+    async tapAssignButton(){
+        await action.click(this.cwoAssignButton);
+    }
+
+    async tapInfoTab(){
+        await action.click(this.cwoInfoTab);    
+    }
 }
 
 module.exports = new CWOPage();
