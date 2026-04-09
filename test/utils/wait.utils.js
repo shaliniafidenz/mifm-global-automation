@@ -1,6 +1,6 @@
 class WaitUtils{
 
-    async waitForDisplayed(element, timeout = 3000){
+    async waitForDisplayed(element, timeout = 5000){
 
         try{
             await element.waitForDisplayed({

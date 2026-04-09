@@ -13,8 +13,13 @@ class ActionUtils{
     }
 
     
-    async getContentDescription(element, timeout = 2000){
-        let value = await element.getAttribute('content-desc');
+    async getContentDescription(element, timeout = 10000, interval = 500){
+    await waitUtils.waitForDisplayed(element);
+
+    const value = await element.getAttribute('content-desc');
+    console.log('Final content-desc:', value);
+
+        //console.log('Value fetched from content-desc:', value);
         return value;
     }
 
@@ -30,10 +35,13 @@ class ActionUtils{
     async getText(element, timeout = 2000){
 
         let value = await element.getAttribute('content-desc');
+        console.log('Value fetched from content-desc:', value);
 
         if(!value){
             value = await element.getText();
         }
+
+        console.log('Value fetched from element:', value);
         return value;
     }
 

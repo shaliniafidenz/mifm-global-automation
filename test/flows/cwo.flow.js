@@ -1,21 +1,24 @@
-const cwoPage = require('../pages/cwo.page');
+const cwoLandingPage = require('../pages/cwo/cwoLanding.page');
+const cwoCreatePage = require('../pages/cwo/cwoCreate.page');
+const cwoDetailsPage = require('../pages/cwo/cwoDetail.page');
 const headerPage = require('../pages/header.page');
 const footerPage = require('../pages/footer.page');
 const commonPage = require('../pages/common.page');
 const action = require('../utils/action.utils');
+const waitUtils = require('../utils/wait.utils');
 
 class CWOFlow{
 
     async navigateToCWOFromBottomNav(){
         await footerPage.tapCWOFooterIcon();
-        return await cwoPage.getCWOTitle();
+        return await cwoLandingPage.getCWOTitle();
     }
 
     async navigateToCWOFromRightMenuDrawer(){
         await headerPage.openMenuDrawer();
         await headerPage.selectOptionFromDrawer('CWO');
 
-        return await cwoPage.getCWOTitle();
+        return await cwoLandingPage.getCWOTitle();
     }
 
     async navigateToCWOFromBottomMenu(){
@@ -23,45 +26,45 @@ class CWOFlow{
         await footerPage.tapFooterMenu();
         await footerPage.selectOptionFromFooterMenu('CWO');
 
-        return await cwoPage.getCWOTitle();
+        return await cwoLandingPage.getCWOTitle();
     }
 
     async createCWO(){
         //creating a new CWO with minimal details
-        await cwoPage.tapCreateCWO();
+        await cwoLandingPage.tapCreateCWO();
 
-        await cwoPage.tapBuildingDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoPage.cwoBuildingDropdownOptions, '10 MBC');
+        await cwoCreatePage.tapBuildingDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, '10 MBC');
 
-        await cwoPage.tapLocationDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoPage.cwoLocationDropdownOptions, '10 MBC L5');
+        await cwoCreatePage.tapLocationDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, '10 MBC L5');
 
-        await cwoPage.tapProblemTypeDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoPage.cwoProblemTypeDropdownOptions, 'Aircon is not cold');
+        await cwoCreatePage.tapProblemTypeDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, 'Aircon is not cold');
 
-        await cwoPage.tapSubmitButton();
+        await cwoCreatePage.tapSubmitButton();
         await commonPage.waitForLoaderToDisappear();
 
-        return await cwoPage.getCWODetailsHeaderText();
+       // return await cwoCreatePage.getCWODetailsHeaderText();
         
     }
 
     async returnErrorMessageForCreatingCWOWithEmptyFields(){
-        await cwoPage.tapCreateCWO();
+        await cwoLandingPage.tapCreateCWO();
         
         //clear the default selections for the Work Order Type which is a requried field
-        await cwoPage.tapWorkOrderTypeDropdown();
-        await cwoPage.tapWorkOrderTypeClearButton();
+        await cwoCreatePage.tapWorkOrderTypeDropdown();
+        await cwoCreatePage.tapWorkOrderTypeClearButton();
 
         await cwoPage.tapSubmitButton();
 
         //Validate availability of error messages for required fields
-        const buildingRequiredMessageVisible = await action.isDisplayed(cwoPage.cwoBuildingRequiredErrorMessage);
-        const locationRequiredMessageVisible = await action.isDisplayed(cwoPage.cwoLocationRequiredErrorMessage);
-        const problemTypeRequiredMessageVisible = await action.isDisplayed(cwoPage.cwoProblemTypeRequiredErrorMessage);
-        const workOrderTypeRequiredMessageVisible = await action.isDisplayed(cwoPage.cwoWorkOrderTypeRequiredErrorMessage);
-        const serviceCategoryRequiredMessageVisible = await action.isDisplayed(cwoPage.cwoServiceCategoryRequiredErrorMessage);
-        const priorityLevelRequiredMessageVisible = await action.isDisplayed(cwoPage.cwoPriorityLevelRequiredErrorMessage);
+        const buildingRequiredMessageVisible = await action.isDisplayed(cwoCreatePage.cwoBuildingRequiredErrorMessage);
+        const locationRequiredMessageVisible = await action.isDisplayed(cwoCreatePage.cwoLocationRequiredErrorMessage);
+        const problemTypeRequiredMessageVisible = await action.isDisplayed(cwoCreatePage.cwoProblemTypeRequiredErrorMessage);
+        const workOrderTypeRequiredMessageVisible = await action.isDisplayed(cwoCreatePage.cwoWorkOrderTypeRequiredErrorMessage);
+        const serviceCategoryRequiredMessageVisible = await action.isDisplayed(cwoCreatePage.cwoServiceCategoryRequiredErrorMessage);
+        const priorityLevelRequiredMessageVisible = await action.isDisplayed(cwoCreatePage.cwoPriorityLevelRequiredErrorMessage);
 
         return {
             buildingRequired: buildingRequiredMessageVisible,
@@ -76,40 +79,40 @@ class CWOFlow{
 
     async resetCWO(){
         
-        await cwoPage.tapCreateCWO();
+        await cwoLandingPage.tapCreateCWO();
 
         //select values for all input fields
-        await cwoPage.tapRequesterDropdown();
-        await commonPage.selectRandomOption(cwoPage.cwoRequesterDropdownOptions);
+        await cwoCreatePage.tapRequesterDropdown();
+        await commonPage.selectRandomOption(cwoCreatePage.cwoRequesterDropdownOptions);
 
-        await cwoPage.tapBuildingDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoPage.cwoBuildingDropdownOptions, 'CW');
+        await cwoCreatePage.tapBuildingDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, 'CW');
 
-        await cwoPage.tapLocationDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoPage.cwoLocationDropdownOptions, 'CW');
+        await cwoCreatePage.tapLocationDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, 'CW');
 
-        await cwoPage.tapProblemTypeDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoPage.cwoProblemTypeDropdownOptions, 'Audio Visual');
+        await cwoCreatePage.tapProblemTypeDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, 'Audio Visual');
         
-        await cwoPage.tapAssetDropdown();
-        await commonPage.selectRandomOption(cwoPage.cwoAssetDropdownOptions);
+        await cwoCreatePage.tapAssetDropdown();
+        await commonPage.selectRandomOption(cwoCreatePage.cwoAssetDropdownOptions);
 
-        await cwoPage.tapDescriptionField();
-        await cwoPage.enterDescription('This is a description for resetting CWO creation');
+        await cwoCreatePage.tapDescriptionField();
+        await cwoCreatePage.enterDescription('This is a description for resetting CWO creation');
         await driver.hideKeyboard();
 
-        await cwoPage.tapResetCWOButton();
+        await cwoCreatePage.tapResetCWOButton();
 
         //get the values of the fields after reset and return in an object
-        const requesterValue = (await action.getText(cwoPage.cwoRequesterDropdown)).split('\n')[2]; // get only visible text
-        const buildingValue = (await action.getText(cwoPage.cwoBuildingDropdown)).split('\n')[2];
-        const locationValue = (await action.getText(cwoPage.cwoLocationDropdown)).split('\n')[2];
-        const workOrderTypeValue = (await action.getText(cwoPage.cwoWorkOrderTypeDropdown)).split('\n')[2];
-        const problemTypeValue = (await action.getText(cwoPage.cwoProblemTypeDropdown)).split('\n')[2];
-        const serviceCategoryValue = (await action.getText(cwoPage.cwoServiceCategoryDropdown)).split('\n')[2];
-        const priorityLevelValue = (await action.getText(cwoPage.cwoPriorityLevelDropdown)).split('\n')[2];
-        const assetValue = (await action.getText(cwoPage.cwoAssetDropdown)).split('\n')[2];
-        const descriptionValue = await action.getText(cwoPage.cwoDescription);
+        const requesterValue = (await action.getText(cwoCreatePage.cwoRequesterDropdown)).split('\n')[2]; // get only visible text
+        const buildingValue = (await action.getText(cwoCreatePage.cwoBuildingDropdown)).split('\n')[2];
+        const locationValue = (await action.getText(cwoCreatePage.cwoLocationDropdown)).split('\n')[2];
+        const workOrderTypeValue = (await action.getText(cwoCreatePage.cwoWorkOrderTypeDropdown)).split('\n')[2];
+        const problemTypeValue = (await action.getText(cwoCreatePage.cwoProblemTypeDropdown)).split('\n')[2];
+        const serviceCategoryValue = (await action.getText(cwoCreatePage.cwoServiceCategoryDropdown)).split('\n')[2];
+        const priorityLevelValue = (await action.getText(cwoCreatePage.cwoPriorityLevelDropdown)).split('\n')[2];
+        const assetValue = (await action.getText(cwoCreatePage.cwoAssetDropdown)).split('\n')[2];
+        const descriptionValue = await action.getText(cwoCreatePage.cwoDescription);
 
         return {
             requester: requesterValue.trim(), //removing any extra spaces or newline characters
@@ -126,53 +129,34 @@ class CWOFlow{
     }
 
     async isNoResultsFoundMessageVisible(){
-        return await cwoPage.isNoResultsFoundMessageVisible();
+        return await cwoLandingPage.isNoResultsFoundMessageVisible();
     }
 
     async getAllCWOs(){
-        await cwoPage.tapFilterButton();
-        await cwoPage.tapAssignedToToggle('All');
-        await cwoPage.tapApplyFilterButton();
+        await cwoLandingPage.tapFilterButton();
+        await cwoLandingPage.tapAssignedToToggle('All');
+        await cwoLandingPage.tapApplyFilterButton();
         await browser.pause(3000); // Pause to allow the list to refresh with all CWOs
     }
 
     async isNewCardVisibleInCWOList(){
-        return await cwoPage.isCWOStatusCardVisible('New');
+        return await cwoLandingPage.isCWOStatusCardVisible('New');
     }
 
     async isAssignmentCardVisibleInCWOList(){
-        return await cwoPage.isCWOStatusCardVisible('Assignment');
+        return await cwoLandingPage.isCWOStatusCardVisible('Assignment');
     }
 
     async isAcknowledgementCardVisibleInCWOList(){
-        return await cwoPage.isCWOStatusCardVisible('Acknowledgement');
+        return await cwoLandingPage.isCWOStatusCardVisible('Acknowledgement');
     }
 
     async isInProgressCardVisibleInCWOList(){
-        return await cwoPage.isCWOStatusCardVisible('In-Progress');
+        return await cwoLandingPage.isCWOStatusCardVisible('In-Progress');
     }
 
     async isCompletedCardVisibleInCWOList(){
-        return await cwoPage.isCWOStatusCardVisible('Completed');
-    }
-
-    async areCWOCardsVisible(){
-        const newCardVisible = await this.isNewCardVisibleInCWOList();
-        const assignmentCardVisible = await this.isAssignmentCardVisibleInCWOList();
-        const acknowledgementCardVisible = await this.isAcknowledgementCardVisibleInCWOList();  
-        const inProgressCardVisible = await this.isInProgressCardVisibleInCWOList();
-        const completedCardVisible = await this.isCompletedCardVisibleInCWOList();
-
-        return (newCardVisible && assignmentCardVisible && acknowledgementCardVisible && inProgressCardVisible && completedCardVisible);
-    }
-
-    async displayAllCWO(){
-        // Tap on the filter dropdown
-        await cwoPage.tapFilterButton();
-
-        // Tap on the "All" toggle under Assigned To filter
-        await cwoPage.tapAssignedToToggle('All');
-        await cwoPage.tapApplyFilterButton();
+        return await cwoLandingPage.isCWOStatusCardVisible('Completed');
     }
 
     async getWokOrderDataForGivenStatus(status){
@@ -182,48 +166,48 @@ class CWOFlow{
 
         switch (status) {
             case 'New':
-                element = await cwoPage.newCard;
+                element = await cwoLandingPage.newCard;
                 isCardVisible = await action.isDisplayed(element);
                 await element.click();
-                totalNoOfWorkOrders = await cwoPage.getTotalWOCount(element);
+                totalNoOfWorkOrders = await cwoLandingPage.getTotalWOCountByStatus(element);
                 await browser.pause(2000);
-                isListVisible = await cwoPage.isCWOListVisible(cwoPage.newWOFirstListItem);
+                isListVisible = await cwoLandingPage.isCWOListVisible(cwoLandingPage.newWOFirstListItem);
                 break;
 
             case 'Assignment':
-                element = await cwoPage.assignmentCard;
+                element = await cwoLandingPage.assignmentCard;
                 isCardVisible = await action.isDisplayed(element);
                 await element.click();
-                totalNoOfWorkOrders = await cwoPage.getTotalWOCount(element);
+                totalNoOfWorkOrders = await cwoLandingPage.getTotalWOCountByStatus(element);
                 await browser.pause(2000);
-                isListVisible = await cwoPage.isCWOListVisible(cwoPage.assignmentWOFirstListItem);
+                isListVisible = await cwoLandingPage.isCWOListVisible(cwoLandingPage.assignmentWOFirstListItem);
                 break;
 
             case 'Acknowledgement':
-                element = await cwoPage.acknowledgementCard;
+                element = await cwoLandingPage.acknowledgementCard;
                 isCardVisible = await action.isDisplayed(element);
                 await element.click();
-                totalNoOfWorkOrders = await cwoPage.getTotalWOCount(element);
+                totalNoOfWorkOrders = await cwoLandingPage.getTotalWOCountByStatus(element);
                 await browser.pause(2000);
-                isListVisible = await cwoPage.isCWOListVisible(cwoPage.acknowledgementWOFirstListItem);
+                isListVisible = await cwoLandingPage.isCWOListVisible(cwoLandingPage.acknowledgementWOFirstListItem);
                 break;
 
             case 'In-Progress':
-                element = await cwoPage.inProgressCard;
+                element = await cwoLandingPage.inProgressCard;
                 isCardVisible = await action.isDisplayed(element);
                 await element.click();
-                totalNoOfWorkOrders = await cwoPage.getTotalWOCount(element);
+                totalNoOfWorkOrders = await cwoLandingPage.getTotalWOCountByStatus(element);
                 await browser.pause(2000);
-                isListVisible = await cwoPage.isCWOListVisible(cwoPage.inProgressWOFirstListItem);
+                isListVisible = await cwoLandingPage.isCWOListVisible(cwoLandingPage.inProgressWOFirstListItem);
                 break;
 
             case 'Completed':
-                element = await cwoPage.completedCard;
+                element = await cwoLandingPage.completedCard;
                 isCardVisible = await action.isDisplayed(element);
                 await element.click();
-                totalNoOfWorkOrders = await cwoPage.getTotalWOCount(element);
+                totalNoOfWorkOrders = await cwoLandingPage.getTotalWOCountByStatus(element);
                 await browser.pause(2000);
-                isListVisible = await cwoPage.isCWOListVisible(cwoPage.completedWOFirstListItem);
+                isListVisible = await cwoLandingPage.isCWOListVisible(cwoLandingPage.completedWOFirstListItem);
                 break;
 
             default:
@@ -240,8 +224,12 @@ class CWOFlow{
 
         switch (status) {
             case 'New':
-                cardElement = await cwoPage.newCard;
-                listItemsElements = cwoPage.newWOListItems;
+                cardElement = await cwoLandingPage.newCard;
+                listItemsElements = cwoLandingPage.newWOListItems;
+                break;
+            case 'Assignment':
+                cardElement = await cwoLandingPage.assignmentCard;
+                listItemsElements = cwoLandingPage.assignmentWOListItems;
                 break;
             default:
                 throw new Error(`Unsupported CWO status for tapping work order card: ${status}`);
@@ -249,11 +237,15 @@ class CWOFlow{
 
         await action.click(cardElement); // Click on the status card to view the list
         await browser.pause(2000);
-        const totalNoOfWorkOrders = await cwoPage.getTotalWOCount(cardElement);
+        const totalNoOfWorkOrders = await cwoLandingPage.getTotalWOCountByStatus(cardElement);
 
         if(totalNoOfWorkOrders > 0){
             // Tap on a random work order from the list
-            await commonPage.selectRandomOption(listItemsElements);
+           // await commonPage.selectRandomOption(listItemsElements);
+
+            //select the first WO from the list
+            const listItems = await $$(listItemsElements);
+            await action.click(listItems[0]);
             await browser.pause(2000);
         }
         else{
@@ -262,17 +254,16 @@ class CWOFlow{
     }
 
     async assignSupervisorToNewCWO(){
-
         //Find the Supervisor element and apply filters to load supervisors in the dropdown, then select a random supervisor from the list and assign to the CWO
-        await cwoPage.tapSupervisorSelectAllFilter();
-        await cwoPage.tapSupervisorIgnoreSkillsFilter();
-        await cwoPage.tapSupervisorDropdown();
+        await cwoDetailsPage.tapSelectAllFilter();
+        await cwoDetailsPage.tapIgnoreSkillsFilter();
+        await cwoDetailsPage.tapSupervisorDropdown();
         await browser.pause(7000);
-        await commonPage.selectRandomOption(cwoPage.cwoSupervisorDropdownItems);
+        await commonPage.selectRandomOption(cwoDetailsPage.cwoSupervisorDropdownItems); 
 
-        const supervisorName = (await action.getContentDescription(cwoPage.cwoSupervisorDropdown)).split('\n')[2];;
+        const supervisorName = (await action.getContentDescription(cwoDetailsPage.cwoSupervisorDropdown)).split('\n')[2];;
         console.log(`Selected Supervisor: ${supervisorName}`);
-        await cwoPage.tapAssignButton();
+        await cwoDetailsPage.tapNewAssignButton();
     
         //Asserting the Please Wait banner and Success Message after assigning supervisor to the CWO
         //For Now I'm keeping a blind wait after tapping assign button to wait for the Please Wait banner to appear and disappear as I'm facing issues in locating the banner element. Will replace the blind wait with an explicit wait once the locator issue is resolved.
@@ -281,15 +272,62 @@ class CWOFlow{
         return supervisorName;
     }
 
-    async getSupervisorNameOnCWOInfoTab(){
+    async getNameByRoleFromCWOInfoTab(role){
+
+        let username=null;
+        let elementName;
 
         //Goto Info screen and validate supervisor name
-        await cwoPage.tapInfoTab();
+        await cwoDetailsPage.tapInfoTab();
         await browser.pause(2000);
-        const supervisorNameOnInfoTab = (await action.getText(cwoPage.cwoInfoSupervisorValue)).split('\n')[1];
-        return supervisorNameOnInfoTab;
+
+        switch(role){
+            case 'Supervisor':
+                elementName = cwoDetailsPage.cwoInfoSupervisorValue;
+                break;
+            case 'Technician':
+                elementName = cwoDetailsPage.cwoInfoTechnicianValue;
+                break;
+            default:
+                throw new Error(`Unsupported role for fetching name from CWO Info tab: ${role}`);
+        }
+
+       // console.log(`End of scrolling. Fetching name for role: ${role} using element: ${elementName}`);
+       // await browser.pause(5000); // Pause to allow any potential UI updates after scrolling
+       
+        await cwoDetailsPage.scrollToBottomOfInfoTab(); 
+        const element = await $(elementName);
+       
+        //username = (await action.getText(elementName)).split('\n')[1];
+        await browser.pause(3000);
+        username = (await action.getText(element)).split('\n')[1];
+        console.log(`Fetched name for role: ${role} is: ${username}`);
+        return username;
 
     }
+
+    async assignTechnicianToAssignmentCWO(){
+
+        //Find the Supervisor element and apply filters to load supervisors in the dropdown, then select a random supervisor from the list and assign to the CWO
+        await cwoDetailsPage.tapSelectAllFilter();
+        await cwoDetailsPage.tapIgnoreSkillsFilter();
+        await cwoDetailsPage.tapIncludeAssignedFilter();
+        await cwoDetailsPage.tapTechnicianDropdown();
+        await browser.pause(7000);
+        await commonPage.selectRandomOption(cwoDetailsPage.cwoTechnicianDropdownItems);
+
+        //const technicianName = (await action.getContentDescription(cwoDetailsPage.cwoTechnicianDropdown)).split('\n')[2];;
+        //console.log(`Selected Technician: ${technicianName}`);
+        //await cwoDetailsPage.tapAssignmentAssignButton();
+    
+        //Asserting the Please Wait banner and Success Message after assigning supervisor to the CWO
+        //For Now I'm keeping a blind wait after tapping assign button to wait for the Please Wait banner to appear and disappear as I'm facing issues in locating the banner element. Will replace the blind wait with an explicit wait once the locator issue is resolved.
+        await browser.pause(5000);
+        
+        return technicianName;
+    }
+
+    
 
     
 

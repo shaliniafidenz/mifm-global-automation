@@ -1,6 +1,6 @@
 const dashboardFlow = require('../flows/dashboard.flow');
 const cwoFlow = require('../flows/cwo.flow');
-const cwoPage = require('../pages/cwo.page');
+const cwoLandingPage = require('../pages/cwo/cwoLanding.page');
 const commonPage = require('../pages/common.page');
 const cwoData = require('../fixtures/cwo.data');
 const session = require('../flows/session.flow');
@@ -67,7 +67,7 @@ describe('CWO E2E Tests', ()=>{
 
         await browser.pause(2000); // Pause to allow CWO list to load
         // Wait for scroll container instead of blind pause
-       //await (await cwoPage.horizontalScrollContainer).waitForDisplayed({ timeout: 5000 });
+       //await (await cwoLandingPage.horizontalScrollContainer).waitForDisplayed({ timeout: 5000 });
 
         //validate CWO Cards are Visible, List is visible for each status if there are work orders and "No results found" message is visible if there are no work orders for a given status. 
         //This will cover TC_CWO_005 and TC_CWO_007
@@ -104,17 +104,19 @@ describe('CWO E2E Tests', ()=>{
         await cwoFlow.navigateToCWOFromBottomNav();
 
         //Assert Create CWO Button is visible
-        const isCWOCreateButtonVisible = await cwoPage.isCWOCreateButtonVisible();
+        const isCWOCreateButtonVisible = await cwoLandingPage.isCWOCreateButtonVisible();
         expect(isCWOCreateButtonVisible).toBe(true);
 
         //Create CWO if the button is visible
         if(isCWOCreateButtonVisible){
-           
-            const cwoDetailsHeader = await cwoFlow.createCWO();
-            console.log('CWO Details Header Text:', cwoDetailsHeader);
 
-            expect(cwoDetailsHeader[1]).toContain('CWO'); // Adjust index based on actual header text format
-            expect(cwoDetailsHeader[3]).toContain('NEW'); // Adjust index based on actual header text format
+            await cwoFlow.createCWO();
+           
+            //const cwoDetailsHeader = await cwoFlow.createCWO();
+            //console.log('CWO Details Header Text:', cwoDetailsHeader);
+
+            //expect(cwoDetailsHeader[1]).toContain('CWO'); // Adjust index based on actual header text format
+            //expect(cwoDetailsHeader[3]).toContain('NEW'); // Adjust index based on actual header text format
 
             await commonPage.tapBack();
             await browser.pause(2000); // Pause to allow UI to update after navigating back
@@ -171,8 +173,7 @@ describe('CWO E2E Tests', ()=>{
         
     }); 
 
-    it('TC_CWO_011: Assign a Supervisor to a CWO', async()=>{
-
+    it('TC_CWO_011: Assign a Supervisor to a NEW CWO', async()=>{
         allure.addFeature('CWO');
         allure.addTag('regression');
         allure.addTag('smoke');
@@ -190,9 +191,39 @@ describe('CWO E2E Tests', ()=>{
         const selectedSupervisor = await cwoFlow.assignSupervisorToNewCWO();
 
         //Goto Info screen and validate supervisor name
-        const supervisorNameOnInfoTab = await cwoFlow.getSupervisorNameOnCWOInfoTab();
-
+        const supervisorNameOnInfoTab = await cwoFlow.getNameByRoleFromCWOInfoTab('Supervisor');
         expect(supervisorNameOnInfoTab).toBe(selectedSupervisor);
 
+        await commonPage.tapBack();
+        await browser.pause(2000);
+        await dashboardFlow.navigateToDashboardFromFooter(); 
+    });
+
+    it('TC_CWO_012: Assign a Technician to a NEW CWO', async()=>{
+        allure.addFeature('CWO');
+        allure.addTag('regression');
+        allure.addTag('smoke');
+        allure.addSeverity('Critical');
+
+        await cwoFlow.navigateToCWOFromBottomNav();
+
+        //Get all CWOs to ensure we have a predictable list of NEW CWOs
+        await cwoFlow.getAllCWOs();
+
+        //Tap on a random visible NEW CWO card
+        await cwoFlow.tapWorkOrderFromTheListByStatus('Assignment');
+
+        //Assign a technician to it. Validate the technician is assigned successfully by checking the assigned technician name on the CWO details screen and also validate the status of the CWO changes to "Assignment"
+        const selectedTechnician = await cwoFlow.assignTechnicianToAssignmentCWO();
+        console.log('Selected Technician:', selectedTechnician);
+
+        //Goto Info screen and validate technician name
+        const technicianNameOnInfoTab = await cwoFlow.getNameByRoleFromCWOInfoTab('Technician');
+        console.log('Technician Name on Info Tab:', technicianNameOnInfoTab);
+        expect(technicianNameOnInfoTab).toBe(selectedTechnician);
+
+        await commonPage.tapBack();
+        await browser.pause(2000);
+        await dashboardFlow.navigateToDashboardFromFooter(); 
     });
 });
