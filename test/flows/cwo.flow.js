@@ -45,7 +45,10 @@ class CWOFlow{
         await cwoCreatePage.tapSubmitButton();
         await commonPage.waitForLoaderToDisappear();
 
-       // return await cwoCreatePage.getCWODetailsHeaderText();
+        const cwoNumber = await cwoDetailsPage.getCWONumberFromHeader();
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+
+        return { cwoNumber, status };
         
     }
 
@@ -316,9 +319,9 @@ class CWOFlow{
         await browser.pause(7000);
         await commonPage.selectRandomOption(cwoDetailsPage.cwoTechnicianDropdownItems);
 
-        //const technicianName = (await action.getContentDescription(cwoDetailsPage.cwoTechnicianDropdown)).split('\n')[2];;
-        //console.log(`Selected Technician: ${technicianName}`);
-        //await cwoDetailsPage.tapAssignmentAssignButton();
+        const technicianName = (await action.getContentDescription(cwoDetailsPage.cwoTechnicianDropdown)).split('\n')[2];;
+        console.log(`Selected Technician: ${technicianName}`);
+        await cwoDetailsPage.tapAssignmentAssignButton();
     
         //Asserting the Please Wait banner and Success Message after assigning supervisor to the CWO
         //For Now I'm keeping a blind wait after tapping assign button to wait for the Please Wait banner to appear and disappear as I'm facing issues in locating the banner element. Will replace the blind wait with an explicit wait once the locator issue is resolved.

@@ -12,7 +12,7 @@ class SessionFlow{
 
     async waitForAppToLoad(timeout = 60000){
         try{
-            await browser.pause(7000); // Pause to allow any loader to appear
+            await browser.pause(5000); // Pause to allow any loader to appear
             await waitUtils.waitForDisplayed(loginPage.loader);
             console.log('Loader appeared, waiting for it to disappear.');
 

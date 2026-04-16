@@ -13,11 +13,11 @@ class ActionUtils{
     }
 
     
-    async getContentDescription(element, timeout = 10000, interval = 500){
-    await waitUtils.waitForDisplayed(element);
+    async getContentDescription(element){
+        await waitUtils.waitForDisplayed(element);
 
-    const value = await element.getAttribute('content-desc');
-    console.log('Final content-desc:', value);
+        const value = await element.getAttribute('content-desc');
+        //console.log('Final content-desc:', value);
 
         //console.log('Value fetched from content-desc:', value);
         return value;
