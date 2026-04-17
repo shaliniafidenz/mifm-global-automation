@@ -49,12 +49,23 @@ class CWODetailPage{
 
     get cwoInfoTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Information_tab")');}
 
+    get cwoAttachmentTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Attachments_tab")');}
+
+
     get cwoInfoSupervisorValue(){ return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
         '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_supervisor_value"))'; 
     }
 
     get cwoInfoTechnicianValue(){ return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
         '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_technician_value"))'; 
+    }
+
+    get cwoAttachmentBox(){
+        return $('android=new UiSelector().resourceId("attachmentItem_tap_inkwell_09")');
+    }
+
+    get cwoImageNameFromImageHeader(){
+        return $('android=new UiSelector().resourceId("generalAppBar_view_text_01")');
     }
 
     async getCWONumberFromHeader(){
@@ -96,6 +107,10 @@ class CWODetailPage{
 
     async tapInfoTab(){
         await action.click(this.cwoInfoTab);    
+    }
+
+    async tapAttachmentsTab(){
+        await action.click(this.cwoAttachmentTab);
     }
 
     async scrollToBottomOfInfoTab() {

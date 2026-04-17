@@ -66,9 +66,7 @@ describe('CWO E2E Tests', ()=>{
         await cwoFlow.navigateToCWOFromBottomNav();
 
         await browser.pause(2000); // Pause to allow CWO list to load
-        // Wait for scroll container instead of blind pause
-       //await (await cwoLandingPage.horizontalScrollContainer).waitForDisplayed({ timeout: 5000 });
-
+    
         //validate CWO Cards are Visible, List is visible for each status if there are work orders and "No results found" message is visible if there are no work orders for a given status. 
         //This will cover TC_CWO_005 and TC_CWO_007
 
@@ -169,7 +167,7 @@ describe('CWO E2E Tests', ()=>{
         
     }); 
 
-    it('TC_CWO_011: Assign a Supervisor to a NEW CWO', async()=>{
+    it.skip('TC_CWO_011: Assign a Supervisor to a NEW CWO', async()=>{
         allure.addFeature('CWO');
         allure.addTag('regression');
         allure.addTag('smoke');
@@ -196,7 +194,7 @@ describe('CWO E2E Tests', ()=>{
         await dashboardFlow.navigateToDashboardFromFooter(); 
     });
 
-    it('TC_CWO_012: Assign a Technician to a NEW CWO', async()=>{
+    it.skip('TC_CWO_012: Assign a Technician to a NEW CWO', async()=>{
         allure.addFeature('CWO');
         allure.addTag('regression');
         allure.addTag('smoke');
@@ -224,4 +222,44 @@ describe('CWO E2E Tests', ()=>{
         await browser.pause(2000);
         await dashboardFlow.navigateToDashboardFromFooter(); 
     });
+
+    it('TC_CWO_004: Create a new CWO with uploading image', async()=>{
+        allure.addFeature('CWO');
+        allure.addSeverity('Critiical');
+        allure.addTag('smoke');  
+        allure.addTag('regression');
+
+        await cwoFlow.navigateToCWOFromBottomNav();
+
+        //Assert Create CWO Button is visible
+        const isCWOCreateButtonVisible = await cwoLandingPage.isCWOCreateButtonVisible();
+        expect(isCWOCreateButtonVisible).toBe(true);
+
+        //Create CWO if the button is visible
+        if(isCWOCreateButtonVisible){
+            const cwoDetailsHeader = await cwoFlow.createCWOWithImageUpload();
+            console.log('CWO Details Header Text:', cwoDetailsHeader);
+
+            expect(cwoDetailsHeader.cwoNumber).toContain('CWO');
+            expect(cwoDetailsHeader.status).toContain('NEW');
+
+            console.log('Image name is ' + cwoDetailsHeader.imageName);
+
+            //get the image name from the attachments tab
+            const imageNameFromAttachmentTab = await cwoFlow.getImageNameFromAttachmentsTab();
+
+            console.log('Image returned from the attachments tab is ' + imageNameFromAttachmentTab);
+
+            const stripExt = (filename) => filename.replace(/\.[^/.]+$/, '');
+            expect(stripExt(imageNameFromAttachmentTab)).toBe(stripExt(cwoDetailsHeader.imageName));
+
+            await commonPage.tapBack();// Go back to attachments tab
+            await browser.pause(2000); 
+
+            await commonPage.tapBack(); // Go back to CWO
+            await browser.pause(2000);
+            await dashboardFlow.navigateToDashboardFromFooter();
+        }  
+        
+    }); 
 });

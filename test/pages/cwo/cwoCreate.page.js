@@ -62,6 +62,19 @@ class CWOCreatePage{
         '.scrollIntoView(new UiSelector().resourceId("cwo_create_description_txt"))'); 
     }
 
+    get cwoAddPhotoTile() { return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("cwo_create_addPhoto_upload"))'); 
+    }
+
+    get uploadFromGalleryOption(){
+        return $('android=new UiSelector().resourceId("createCwo_tap_listTile_27")');
+    }
+
+    get uploadedImageThumbBox(){
+         return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("attachmentItem_tap_inkwell_09"))');
+    }
+
     get cwoSubmitButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
         '.scrollIntoView(new UiSelector().resourceId("cwo_create_submit_button"))'); 
     }
@@ -92,6 +105,21 @@ class CWOCreatePage{
 
     get cwoPriorityLevelRequiredErrorMessage(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
         '.scrollIntoView(new UiSelector().resourceId("cwo_create_priorityLevel_required_error"))'); 
+    }
+
+     get galleryImages() {
+        // Android 13+ photo picker
+        return $$('//*[@resource-id="com.google.android.providers.media.module:id/icon_thumbnail"]');
+    }
+
+    get galleryImagesLegacy() {
+        // Older Android / Google Photos
+        return $$('android=new UiSelector().resourceId("com.google.android.documentsui:id/icon_thumb")');
+    }
+
+    // Preview popup (your app's custom preview)
+    get attachmentPreviewOkButton() {
+        return $('android=new UiSelector().resourceId("attachmentPostPopup_view_text_02")');
     }
 
     async tapRequesterDropdown(){
@@ -130,6 +158,14 @@ class CWOCreatePage{
         await action.type(this.cwoDescription, description);
     }
 
+    async tapAddPhotoTile(){
+        await action.click(this.cwoAddPhotoTile);
+    }
+
+    async tapUploadFromGalleryOption(){
+        await action.click(this.uploadFromGalleryOption);
+    }
+
     async tapSubmitButton(){
         await action.click(this.cwoSubmitButton);
     }
@@ -137,7 +173,6 @@ class CWOCreatePage{
     async tapResetCWOButton(){
         await action.click(this.cwoResetButton);
     }
-
     
     async selectOptionByTextAndIndex(dropdownName,option){
 
@@ -168,6 +203,31 @@ class CWOCreatePage{
                 throw new Error(`Unsupported dropdown name: ${dropdownName}`);
         }
 
+    }
+
+    async selectFirstImageFromGallery() {
+        // Wait for gallery to load
+        await browser.pause(2000);
+        
+        let images = await this.galleryImages;
+        if (images.length === 0) {
+            images = await this.galleryImagesLegacy;
+        }
+        
+        if (images.length === 0) {
+            throw new Error('No images found in gallery. Ensure test image was pushed to device.');
+        }
+        
+        await images[0].click();
+    }
+    
+    async confirmPreview() {
+        await this.attachmentPreviewOkButton.waitForDisplayed({ timeout: 5000 });
+        await this.attachmentPreviewOkButton.click();
+        await this.attachmentPreviewOkButton.waitForDisplayed({ 
+            reverse: true, 
+            timeout: 5000 
+        });
     }
 
 }

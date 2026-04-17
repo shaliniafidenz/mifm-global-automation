@@ -52,6 +52,61 @@ class CWOFlow{
         
     }
 
+    async createCWOWithImageUpload(){
+        //creating a new CWO with image upload
+        await cwoLandingPage.tapCreateCWO();
+
+        await cwoCreatePage.tapBuildingDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, '10 MBC');
+
+        await cwoCreatePage.tapLocationDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, '10 MBC L5');
+
+        await cwoCreatePage.tapProblemTypeDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, 'Aircon is not cold');
+
+        await cwoCreatePage.tapAddPhotoTile();
+        await cwoCreatePage.tapUploadFromGalleryOption();
+        await cwoCreatePage.selectFirstImageFromGallery();
+
+        await browser.pause(2000);
+        await cwoCreatePage.confirmPreview();
+
+        await browser.pause(2000);
+
+        const imageName = (await action.getContentDescription(cwoCreatePage.uploadedImageThumbBox)).split('\n')[2];
+        console.log('Image name ' + imageName);
+        
+        await cwoCreatePage.tapSubmitButton();
+        await commonPage.waitForLoaderToDisappear();
+
+        await browser.pause(5000); // this is the replacement to validate success banner of image upload
+
+        const cwoNumber = await cwoDetailsPage.getCWONumberFromHeader();
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+
+        return { cwoNumber, status, imageName };
+        
+    }
+
+    async getImageNameFromAttachmentsTab(){
+
+        await cwoDetailsPage.tapAttachmentsTab();
+
+        try{
+            await action.click(cwoDetailsPage.cwoAttachmentBox);
+            const imageBox = await action.getContentDescription(cwoDetailsPage.cwoImageNameFromImageHeader);
+            const imageName = await imageBox.split('\n')[1];
+            console.log('Image name ' + imageName);
+
+            return imageName;
+        }
+        catch(error){
+            throw new Error('No Images display in the attachment tab ' + error);
+        }
+        
+    }
+
     async returnErrorMessageForCreatingCWOWithEmptyFields(){
         await cwoLandingPage.tapCreateCWO();
         
