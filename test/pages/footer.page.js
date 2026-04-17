@@ -41,6 +41,10 @@ class FooterPage{
     async tapCWOFooterIcon(){
         await action.click(this.cwoFooterIcon);
     }
+
+    async tapPPMFooterIcon(){
+        await action.click(this.ppmFooterIcon);
+    }
 }
 
 module.exports = new FooterPage();
