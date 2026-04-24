@@ -6,8 +6,6 @@ class CommonPage{
     get backButton(){ return $('~Back');}
     get loader(){ return $('android=new UiSelector().resourceId("dashboard_loader")');}
 
-    
-
     async tapBack(){
         await action.click(this.backButton);
     }

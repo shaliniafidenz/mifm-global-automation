@@ -2,6 +2,7 @@ const dashboardFlow = require('../flows/dashboard.flow');
 const cwoFlow = require('../flows/cwo.flow');
 const cwoLandingPage = require('../pages/cwo/cwoLanding.page');
 const commonPage = require('../pages/common.page');
+const mediaHelper = require('../pages/mediaHelper');
 const cwoData = require('../fixtures/cwo.data');
 const session = require('../flows/session.flow');
 const allure = require('@wdio/allure-reporter').default;
@@ -229,6 +230,8 @@ describe('CWO E2E Tests', ()=>{
         allure.addTag('smoke');  
         allure.addTag('regression');
 
+        await mediaHelper.pushTestImageToDevice();
+
         await cwoFlow.navigateToCWOFromBottomNav();
 
         //Assert Create CWO Button is visible
@@ -243,12 +246,8 @@ describe('CWO E2E Tests', ()=>{
             expect(cwoDetailsHeader.cwoNumber).toContain('CWO');
             expect(cwoDetailsHeader.status).toContain('NEW');
 
-            console.log('Image name is ' + cwoDetailsHeader.imageName);
-
             //get the image name from the attachments tab
             const imageNameFromAttachmentTab = await cwoFlow.getImageNameFromAttachmentsTab();
-
-            console.log('Image returned from the attachments tab is ' + imageNameFromAttachmentTab);
 
             const stripExt = (filename) => filename.replace(/\.[^/.]+$/, '');
             expect(stripExt(imageNameFromAttachmentTab)).toBe(stripExt(cwoDetailsHeader.imageName));

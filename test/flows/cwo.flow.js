@@ -75,7 +75,6 @@ class CWOFlow{
         await browser.pause(2000);
 
         const imageName = (await action.getContentDescription(cwoCreatePage.uploadedImageThumbBox)).split('\n')[2];
-        console.log('Image name ' + imageName);
         
         await cwoCreatePage.tapSubmitButton();
         await commonPage.waitForLoaderToDisappear();
