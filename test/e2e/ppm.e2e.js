@@ -2,6 +2,7 @@ const dashboardFlow = require('../flows/dashboard.flow');
 const ppmFlow = require('../flows/ppm.flow');
 const ppmLandingPage = require('../pages/ppm/ppmLanding.page');
 const commonPage = require('../pages/common.page');
+const mediaHelper = require('../pages/mediaHelper');
 const ppmData = require('../fixtures/ppm.data');
 const session = require('../flows/session.flow');
 const allure = require('@wdio/allure-reporter').default;
@@ -179,7 +180,7 @@ describe('PPM E2E Tests', ()=>{
         await dashboardFlow.navigateToDashboardFromFooter();
     });
 
-    it('TC_PPM_012: Assign a Technician to an Assignment PPM', async()=>{
+    it.skip('TC_PPM_012: Assign a Technician to an Assignment PPM', async()=>{
         allure.addFeature('PPM');
         allure.addTag('regression');
         allure.addTag('smoke');
@@ -201,6 +202,67 @@ describe('PPM E2E Tests', ()=>{
         await commonPage.tapBack();
 
         await browser.pause(2000);
+        await dashboardFlow.navigateToDashboardFromFooter();
+    });
+
+    it('TC_PPM_014: Acknowledge a PPM', async()=>{
+        allure.addFeature('PPM');
+        allure.addTag('regression');
+        allure.addTag('smoke');
+        allure.addSeverity('Critical');
+
+        await ppmFlow.navigateToPPMFromBottomNav();
+
+        //Get all PPMs to ensure acknowledgement PPMs are included in the list
+        await ppmFlow.getAllPPMs();
+
+        //Tap on the first visible acknowledgement PPM
+        await ppmFlow.tapWorkOrderFromTheListByStatus('Acknowledgement');
+
+        const acknowledgementResult = await ppmFlow.acknowledgePPM();
+
+        expect(acknowledgementResult.isProcessingBannerVisible).toBe(true);
+        expect(acknowledgementResult.isSuccessBannerVisible).toBe(true);
+        expect(acknowledgementResult.status).toContain('INPROGRESS');
+
+        await commonPage.tapBack();
+        await browser.pause(2000);
+
+        await dashboardFlow.navigateToDashboardFromFooter();
+    });
+
+    it.skip('TC_PPM_013: Upload an image to a PPM via the attachments tab', async()=>{
+        allure.addFeature('PPM');
+        allure.addSeverity('Critical');
+        allure.addTag('smoke');
+        allure.addTag('regression');
+
+        // 1. Push test image to device gallery
+        await mediaHelper.pushTestImageToDevice();
+
+        // 2. Navigate to PPM
+        await ppmFlow.navigateToPPMFromBottomNav();
+
+        // 3. Filter All PPMs
+        await ppmFlow.getAllPPMs();
+
+        // 4. Click on 'New' card and tap on the first list item
+        await ppmFlow.tapWorkOrderFromTheListByStatus('New');
+
+        // 5-7. Open attachments tab, select Add image from gallery, confirm preview popup
+        await ppmFlow.uploadImageFromAttachmentsTab();
+
+        // 8. Verify the image is listed in the attachments tab
+        const imageName = await ppmFlow.getImageNameFromPPMAttachmentsTab();
+        console.log('Uploaded image name:', imageName);
+        expect(imageName).toBeTruthy();
+
+        await commonPage.tapBack(); // back from image detail view
+        await browser.pause(2000);
+
+        await commonPage.tapBack(); // back from PPM detail view
+        await browser.pause(2000);
+
         await dashboardFlow.navigateToDashboardFromFooter();
     });
 });

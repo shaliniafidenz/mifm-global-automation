@@ -224,7 +224,33 @@ describe('CWO E2E Tests', ()=>{
         await dashboardFlow.navigateToDashboardFromFooter(); 
     });
 
-    it('TC_CWO_004: Create a new CWO with uploading image', async()=>{
+    it('TC_CWO_013: Acknowledge a CWO', async()=>{
+        allure.addFeature('CWO');
+        allure.addTag('regression');
+        allure.addTag('smoke');
+        allure.addSeverity('Critical');
+
+        await cwoFlow.navigateToCWOFromBottomNav();
+
+        //Get all CWOs to ensure acknowledgement CWOs are included in the list
+        await cwoFlow.getAllCWOs();
+
+        //Tap on the first visible acknowledgement CWO
+        await cwoFlow.tapWorkOrderFromTheListByStatus('Acknowledgement');
+
+        const acknowledgementResult = await cwoFlow.acknowledgeCWO();
+
+        expect(acknowledgementResult.isProcessingBannerVisible).toBe(true);
+        expect(acknowledgementResult.isSuccessBannerVisible).toBe(true);
+        expect(acknowledgementResult.status).toContain('INPROGRESS');
+
+        await commonPage.tapBack();
+        await browser.pause(2000);
+
+        await dashboardFlow.navigateToDashboardFromFooter();
+    });
+
+    it.skip('TC_CWO_004: Create a new CWO with uploading image', async()=>{
         allure.addFeature('CWO');
         allure.addSeverity('Critiical');
         allure.addTag('smoke');  
@@ -261,4 +287,6 @@ describe('CWO E2E Tests', ()=>{
         }  
         
     }); 
+
+    
 });

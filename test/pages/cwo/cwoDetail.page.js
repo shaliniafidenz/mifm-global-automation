@@ -1,4 +1,5 @@
 const action = require('../../utils/action.utils');
+const waitUtils = require('../../utils/wait.utils');
 const commonPage = require('../common.page');
 
 class CWODetailPage{
@@ -50,6 +51,26 @@ class CWODetailPage{
     get cwoInfoTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Information_tab")');}
 
     get cwoAttachmentTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Attachments_tab")');}
+
+    get cwoSignatureCard(){ return $('android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
+        '.scrollIntoView(new UiSelector().resourceId("displaySignatureBox_tap_gesture_05"))'); 
+    }
+
+    get cwoAcknowledgeButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))'); 
+    }
+
+    get cwoAcknowledgeButtonByText(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))'); 
+    }
+
+    get signatureDoneButton(){ return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").text("DONE")');}
+
+    get signatureDoneButtonByText(){ return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").descriptionContains("DONE")');}
+
+    get processingBannerTitle(){ return $('android=new UiSelector().resourceId("flashBanner_processing_view_title")');}
+
+    get successBannerTitle(){ return $('android=new UiSelector().resourceId("flashBanner_success_view_title")');}
 
 
     get cwoInfoSupervisorValue(){ return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
@@ -111,6 +132,69 @@ class CWODetailPage{
 
     async tapAttachmentsTab(){
         await action.click(this.cwoAttachmentTab);
+    }
+
+    async isSignatureCardVisible(){
+        console.log('Checking if signature card is visible...');
+        return await action.isDisplayedSafe(this.cwoSignatureCard);
+    }
+
+    async tapSignatureCard(){
+        await action.click(this.cwoSignatureCard);
+    }
+
+    async drawSignatureLine(){
+        const size = await driver.getWindowSize();
+        const y = Math.floor(size.height * 0.55);
+        const startX = Math.floor(size.width * 0.25);
+        const endX = Math.floor(size.width * 0.75);
+
+        await driver.performActions([{
+            type: 'pointer',
+            id: 'finger1',
+            parameters: { pointerType: 'touch' },
+            actions: [
+                { type: 'pointerMove', duration: 0, x: startX, y },
+                { type: 'pointerDown', button: 0 },
+                { type: 'pointerMove', duration: 600, x: endX, y },
+                { type: 'pointerUp', button: 0 }
+            ]
+        }]);
+        await driver.releaseActions();
+    }
+
+    async tapSignatureDoneButton(){
+        if(await action.isDisplayedSafe(this.signatureDoneButton)){
+            await action.click(this.signatureDoneButton);
+            return;
+        }
+
+        await action.click(this.signatureDoneButtonByText);
+    }
+
+    async tapAcknowledgeButton(){
+        if(await action.isDisplayedSafe(this.cwoAcknowledgeButton)){
+            await action.click(this.cwoAcknowledgeButton);
+            return;
+        }
+
+        await action.click(this.cwoAcknowledgeButtonByText);
+    }
+
+    async waitForProcessingBanner(timeout = 3000){
+        await this.processingBannerTitle.waitForDisplayed({
+            timeout,
+            timeoutMsg: 'Processing banner did not display'
+        });
+        return await this.processingBannerTitle.isDisplayed();
+    }
+
+    async waitForSuccessBanner(timeout = 15000){
+        await this.successBannerTitle.waitForDisplayed({
+            timeout,
+            timeoutMsg: 'Success banner did not display'
+        });
+        return await this.successBannerTitle.isDisplayed();
     }
 
     async scrollToBottomOfInfoTab() {

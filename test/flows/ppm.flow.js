@@ -240,6 +240,41 @@ class PPMFlow{
         return supervisorName;
     }
 
+    async acknowledgePPM(){
+        await browser.pause(3000);
+
+        // this is to swipe down to make the signature card visible as the acknowledge and signature buttons are located at the bottom of the PPM details screen and might not be visible without scrolling/swiping down
+        const acknowledgeButton = await ppmDetailsPage.ppmAcknowledgeButton;
+
+        const isSignatureCardVisible = await ppmDetailsPage.isSignatureCardVisible();
+        if(isSignatureCardVisible){
+            await ppmDetailsPage.tapSignatureCard();
+            await browser.pause(1000);
+            await ppmDetailsPage.drawSignatureLine();
+            await ppmDetailsPage.tapSignatureDoneButton();
+            await browser.pause(1000);
+        }
+        else{
+            console.log('Signature card is not visible, proceeding without signing');
+        }
+
+        //await ppmDetailsPage.tapAcknowledgeButton();
+        await acknowledgeButton.click();
+
+        const isProcessingBannerVisible = await ppmDetailsPage.waitForProcessingBanner();
+        await browser.pause(5000);
+
+        const isSuccessBannerVisible = await ppmDetailsPage.waitForSuccessBanner();
+        await browser.pause(5000);
+        const status = await ppmDetailsPage.getPPMStatusFromHeader();
+
+        return {
+            isProcessingBannerVisible,
+            isSuccessBannerVisible,
+            status
+        };
+    }
+
     async getNameByRoleFromPPMInfoTab(role){
 
         let username = null;
@@ -289,6 +324,32 @@ class PPMFlow{
         await browser.pause(3000);
 
         return technicianName;
+    }
+
+    async uploadImageFromAttachmentsTab(){
+        await ppmDetailsPage.tapAttachmentsTab();
+        await browser.pause(2000);
+
+        await ppmDetailsPage.tapAddImageButton();
+        await ppmDetailsPage.tapUploadFromGalleryOption();
+        await ppmDetailsPage.selectFirstImageFromGallery();
+
+        await browser.pause(2000);
+        await ppmDetailsPage.confirmPreview();
+
+        await browser.pause(5000); // wait for upload to complete
+    }
+
+    async getImageNameFromPPMAttachmentsTab(){
+        try {
+            await action.click(ppmDetailsPage.ppmAttachmentBox);
+            const imageBox = await action.getContentDescription(ppmDetailsPage.ppmImageNameFromImageHeader);
+            const imageName = imageBox.split('\n')[1];
+            console.log('PPM attachment image name: ' + imageName);
+            return imageName;
+        } catch(error) {
+            throw new Error('No images displayed in PPM attachment tab: ' + error);
+        }
     }
 
 }

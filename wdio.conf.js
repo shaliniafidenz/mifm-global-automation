@@ -23,8 +23,8 @@ exports.config = {
     //
     specs: [
        // './test/e2e/*.e2e.js',
-        './test/e2e/cwo.e2e.js',
-      //  './test/e2e/ppm.e2e.js'
+       // './test/e2e/cwo.e2e.js',
+        './test/e2e/ppm.e2e.js'
     ],
     // Patterns to exclude.
     exclude: [

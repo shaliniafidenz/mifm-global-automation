@@ -288,6 +288,10 @@ class CWOFlow{
                 cardElement = await cwoLandingPage.assignmentCard;
                 listItemsElements = cwoLandingPage.assignmentWOListItems;
                 break;
+            case 'Acknowledgement':
+                cardElement = await cwoLandingPage.acknowledgementCard;
+                listItemsElements = cwoLandingPage.acknowledgementWOListItems;
+                break;
             default:
                 throw new Error(`Unsupported CWO status for tapping work order card: ${status}`);
         }
@@ -308,6 +312,36 @@ class CWOFlow{
         else{
             throw new Error(`No work orders available for status: ${status}`);
         }
+    }
+
+    async acknowledgeCWO(){
+        await browser.pause(3000);
+
+        const isSignatureCardVisible = await cwoDetailsPage.isSignatureCardVisible();
+        if(isSignatureCardVisible){
+            await cwoDetailsPage.tapSignatureCard();
+            await browser.pause(1000);
+            await cwoDetailsPage.drawSignatureLine();
+            await cwoDetailsPage.tapSignatureDoneButton();
+            await browser.pause(1000);
+        }
+        else{
+            console.log('Signature card is not visible, proceeding without signing');
+        }
+        await cwoDetailsPage.tapAcknowledgeButton();
+
+        const isProcessingBannerVisible = await cwoDetailsPage.waitForProcessingBanner();
+        await browser.pause(5000);
+        
+        const isSuccessBannerVisible = await cwoDetailsPage.waitForSuccessBanner();
+        await browser.pause(5000); // Pause to allow any potential UI updates after banners
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+
+            return {
+                isProcessingBannerVisible,
+                isSuccessBannerVisible,
+                status
+            }
     }
 
     async assignSupervisorToNewCWO(){
