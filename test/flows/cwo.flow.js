@@ -113,7 +113,7 @@ class CWOFlow{
         await cwoCreatePage.tapWorkOrderTypeDropdown();
         await cwoCreatePage.tapWorkOrderTypeClearButton();
 
-        await cwoPage.tapSubmitButton();
+        await cwoCreatePage.tapSubmitButton();
 
         //Validate availability of error messages for required fields
         const buildingRequiredMessageVisible = await action.isDisplayed(cwoCreatePage.cwoBuildingRequiredErrorMessage);
