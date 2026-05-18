@@ -11,7 +11,7 @@ describe('Login E2E Tests', ()=>{
         
     })
 
-    it('Verify user cannot login with invalid username', async ()=>{
+    it('TC_LOGIN_001: Verify user cannot login with invalid username', async ()=>{
         allure.addFeature('Login');
         allure.addSeverity('Critical');
         allure.addTag('negative');
@@ -51,7 +51,7 @@ describe('Login E2E Tests', ()=>{
 
     });
 
-     it('Verify user cannot login with invalid password', async ()=>{
+     it('TC_LOGIN_002: Verify user cannot login with invalid password', async ()=>{
         allure.addFeature('Login');
         allure.addSeverity('Critical');
         allure.addTag('negative');
@@ -59,36 +59,52 @@ describe('Login E2E Tests', ()=>{
 
         //This will cover TC_LOGIN_003, TC_LOGIN_004
 
+        // When run in isolation, before() leaves the app logged in — logout first
+        if(await session.isDashboardDisplayed()){
+            await loginFlow.logout();
+            await browser.pause(5000);
+        } else {
+            await browser.pause(2000); // let login page settle after TC_LOGIN_001's tapLogin transition
+        }
+
         const isLoginPageDisplayed = await session.isLoginPageDisplayed();
 
         if(isLoginPageDisplayed){
 
             await loginFlow.loginWithValidUsername();
+            await browser.pause(3000); // wait for password page navigation to complete
             const isLoginPasswordDisplayed = await loginFlow.isLoginPasswordPageDisplayed();
 
             if(isLoginPasswordDisplayed){
                 console.log('On login password page, proceeding with negative login tests.');
 
-                //TC_LOGIN_003: Empty password
-                const emptyPasswordResult = await loginFlow.loginWithEmptyPassword();
-                expect(emptyPasswordResult.passwordVisible).toBe(true);
-                expect(emptyPasswordResult.errorMessageVisible).toBe(true);
-                expect(emptyPasswordResult.errorMessage).toContain('Invalid password');
-                
+                try{
+                    //TC_LOGIN_003: Empty password
+                    const emptyPasswordResult = await loginFlow.loginWithEmptyPassword();
+                    expect(emptyPasswordResult.passwordVisible).toBe(true);
+                    expect(emptyPasswordResult.errorMessageVisible).toBe(true);
+                    expect(emptyPasswordResult.errorMessage).toContain('Invalid password');
 
-                //TC_LOGIN_004: Invalid password
-                const invalidPasswordResult = await loginFlow.loginWithInvalidPassword();
-                expect(invalidPasswordResult.passwordVisible).toBe(true);
-                expect(invalidPasswordResult.errorMessageVisible).toBe(true);
-                expect(invalidPasswordResult.errorMessage).toContain('Invalid password');
-               
+                    //TC_LOGIN_004: Invalid password
+                    const invalidPasswordResult = await loginFlow.loginWithInvalidPassword();
+                    expect(invalidPasswordResult.passwordVisible).toBe(true);
+                    expect(invalidPasswordResult.errorMessageVisible).toBe(true);
+                    expect(invalidPasswordResult.errorMessage).toContain('Invalid password');
+                }
+                finally{
+                    // Always return to username page so the next test starts clean
+                    if(await loginFlow.isLoginPasswordPageDisplayed()){
+                        await loginFlow.goBackToLoginUsernamePage();
+                        await browser.pause(1000);
+                    }
+                }
             }
             else{
                 throw new Error('Unexpected app state: Login password page is not displayed after entering valid username. Cannot proceed with negative login tests.');
             }
         }
         else{
-            throw new Error('Unexpected app state: Login password page is not displayed after logout. Cannot proceed with negative login tests.');
+            throw new Error('Unexpected app state: Login page is not displayed. Cannot proceed with negative login tests.');
         }
 
     });
@@ -102,16 +118,16 @@ describe('Login E2E Tests', ()=>{
 
         //const appId = driver.capabilities.appPackage;
         //await driver.execute('mobile: activateApp', { appId: appId });
-        const isLoginPasswordDisplayed = await loginFlow.isLoginPasswordPageDisplayed();
-        if(isLoginPasswordDisplayed){
+        if(await loginFlow.isLoginPasswordPageDisplayed()){
             await loginFlow.goBackToLoginUsernamePage();
+            await browser.pause(1000);
+        }
 
+        if(await session.isLoginPageDisplayed()){
             //In the login page
             await loginFlow.loginBeforeLoader();
             await session.waitForAppToLoad();
         }
-
-        await browser.pause(3000); // Temporary pause to allow app to load after login. Replace with better wait strategy.
 
         const homeTitle = await loginFlow.getHomeTitle();
         expect(homeTitle).toContain('Active Work Orders');

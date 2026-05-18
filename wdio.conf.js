@@ -1,3 +1,22 @@
+// Fire-and-forget POST to the UI runner's /api/step endpoint.
+// Silently no-ops if the UI runner is not running.
+function postStep(data) {
+    try {
+        const http = require('http');
+        const body = JSON.stringify(data);
+        const req = http.request({
+            hostname: '127.0.0.1', port: 3939, path: '/api/step', method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) },
+        });
+        req.on('error', function () {});
+        req.write(body);
+        req.end();
+    } catch (e) {}
+}
+
+let _cmdSeq = 0;
+const _cmdStack = [];
+
 exports.config = {
     //
     // ====================
@@ -56,8 +75,8 @@ exports.config = {
     capabilities: [{
         // capabilities for local Appium web tests on an Android Emulator
         platformName: 'Android',
-        'appium:deviceName': 'R58M81ZYXKH',
-        'appium:platformVersion': '11',
+        'appium:deviceName': '2b74440c',
+        'appium:platformVersion': '13',
         'appium:automationName': 'UiAutomator2',
         'appium:appPackage': 'com.certisgroup.mifmv2',
         'appium:appActivity': 'com.certisgroup.mifmv2.MainActivity',
@@ -235,8 +254,12 @@ exports.config = {
      * @param {string} commandName hook command name
      * @param {Array} args arguments that command would receive
      */
-    // beforeCommand: function (commandName, args) {
-    // },
+    beforeCommand: function (commandName, args) {
+        const id = 'cmd_' + (++_cmdSeq);
+        _cmdStack.push(id);
+        const info = args && args[0] != null ? String(args[0]).slice(0, 100) : '';
+        postStep({ type: 'cmdStart', id: id, label: commandName, info: info });
+    },
     /**
      * Hook that gets executed before the suite starts
      * @param {object} suite suite details
@@ -246,8 +269,11 @@ exports.config = {
     /**
      * Function to be executed before a test (in Mocha/Jasmine) starts.
      */
-    // beforeTest: function (test, context) {
-    // },
+    beforeTest: function (test, context) {
+        _cmdStack.length = 0;
+        const m = test.title.match(/^(TC_[A-Z]+_\d+)/);
+        postStep({ type: 'testStart', tcId: m ? m[1] : '', title: test.title });
+    },
     /**
      * Hook that gets executed _before_ a hook within the suite starts (e.g. runs before calling
      * beforeEach in Mocha)
@@ -270,10 +296,11 @@ exports.config = {
      * @param {boolean} result.passed    true if test has passed, otherwise false
      * @param {object}  result.retries   information about spec related retries, e.g. `{ attempts: 0, limit: 0 }`
      */
-     afterTest: async function(test, context, { error }) {
+     afterTest: async function(test, context, { error, duration, passed }) {
         if(error){
             await browser.takeScreenshot();
         }
+        postStep({ type: 'testEnd', passed: !!passed, duration: duration || 0 });
      },
 
 
@@ -290,8 +317,10 @@ exports.config = {
      * @param {number} result 0 - command success, 1 - command error
      * @param {object} error error object if any
      */
-    // afterCommand: function (commandName, args, result, error) {
-    // },
+    afterCommand: function (commandName, args, result, error) {
+        const id = _cmdStack.pop() || '';
+        postStep({ type: 'cmdEnd', id: id, passed: !error, error: error ? (error.message || String(error)) : null });
+    },
     /**
      * Gets executed after all tests are done. You still have access to all global variables from
      * the test.
