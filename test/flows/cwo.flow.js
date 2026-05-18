@@ -360,7 +360,9 @@ class CWOFlow{
         //For Now I'm keeping a blind wait after tapping assign button to wait for the Please Wait banner to appear and disappear as I'm facing issues in locating the banner element. Will replace the blind wait with an explicit wait once the locator issue is resolved.
         await browser.pause(5000);
         
-        return supervisorName;
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+
+        return {supervisorName, status};
     }
 
     async getNameByRoleFromCWOInfoTab(role){
@@ -415,7 +417,9 @@ class CWOFlow{
         //For Now I'm keeping a blind wait after tapping assign button to wait for the Please Wait banner to appear and disappear as I'm facing issues in locating the banner element. Will replace the blind wait with an explicit wait once the locator issue is resolved.
         await browser.pause(5000);
         
-        return technicianName;
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+
+        return {technicianName, status};
     }
 
     

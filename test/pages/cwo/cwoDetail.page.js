@@ -64,9 +64,9 @@ class CWODetailPage{
         '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))'); 
     }
 
-    get signatureDoneButton(){ return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").text("DONE")');}
+    get signatureDoneButton(){ return $('android=new UiSelector().resourceId("cwo_acknowledgement_signatureDialog_done_button").text("DONE")');}
 
-    get signatureDoneButtonByText(){ return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").descriptionContains("DONE")');}
+    get signatureDoneButtonByText(){ return $('android=new UiSelector().resourceId("cwo_acknowledgement_signatureDialog_done_button").descriptionContains("DONE")');}
 
     get processingBannerTitle(){ return $('android=new UiSelector().resourceId("flashBanner_processing_view_title")');}
 
@@ -95,7 +95,7 @@ class CWODetailPage{
     }
 
     async getCWOStatusFromHeader(){
-        return await action.getContentDescription(this.cwoStatus);
+        return (await action.getContentDescription(this.cwoStatus)).split('\n')[1]; // get only the status
     }
 
     async tapSelectAllFilter(){
@@ -182,19 +182,31 @@ class CWODetailPage{
     }
 
     async waitForProcessingBanner(timeout = 3000){
-        await this.processingBannerTitle.waitForDisplayed({
-            timeout,
-            timeoutMsg: 'Processing banner did not display'
-        });
-        return await this.processingBannerTitle.isDisplayed();
+        try{
+            await this.processingBannerTitle.waitForDisplayed({
+                timeout,
+                timeoutMsg: 'Processing banner did not display'
+            });
+            return await this.processingBannerTitle.isDisplayed();
+        }
+        catch(error){
+            console.error('Error waiting for processing banner:', error);
+            return false;
+        }     
     }
 
     async waitForSuccessBanner(timeout = 15000){
-        await this.successBannerTitle.waitForDisplayed({
+        try{
+            await this.successBannerTitle.waitForDisplayed({
             timeout,
             timeoutMsg: 'Success banner did not display'
-        });
-        return await this.successBannerTitle.isDisplayed();
+            });
+            return await this.successBannerTitle.isDisplayed();
+        }
+        catch(error){
+            console.error('Error waiting for success banner:', error);
+            return false;
+        }
     }
 
     async scrollToBottomOfInfoTab() {
