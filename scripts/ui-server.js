@@ -82,14 +82,33 @@ function buildTmpSpec(specPath, tests) {
         "        return t === tc || t.indexOf(tc + ':') === 0 || t.indexOf(tc + ' ') === 0;",
         "    });",
         "}",
-        "global.it      = function(t, fn) { return __match(t) ? __orig(t, fn) : __orig(t); };",
-        "global.it.skip = function(t, fn) { return __match(t) ? __orig(t, fn) : __orig(t); };",
+        "global.it      = function(t, fn) { return __match(t) ? __orig(t, fn) : void 0; };",
+        "global.it.skip = function(t, fn) { return __match(t) ? __orig(t, fn) : void 0; };",
         "global.it.only = __orig.only;",
         "require('" + absSpec + "');",
         "global.it = __orig;",
     ].join('\n');
     const p = path.join(ROOT, '.wdio_ui_tmp.js');
     fs.writeFileSync(p, src);
+    return p;
+}
+
+// Write a temp wrapper spec that un-skips ALL tests across the given spec files.
+// Used for "run suite" and "run all" so it.skip tests appear in Allure as executed.
+function buildTmpSpecUnrestricted(specPaths) {
+    const lines = [
+        "'use strict';",
+        "var __orig = global.it;",
+        "global.it      = function(t, fn) { return fn ? __orig(t, fn) : __orig(t); };",
+        "global.it.skip = function(t, fn) { return fn ? __orig(t, fn) : __orig(t); };",
+        "global.it.only = __orig.only;",
+    ];
+    specPaths.forEach(function (specPath) {
+        lines.push("require('" + path.join(ROOT, specPath).replace(/\\/g, '\\\\') + "');");
+    });
+    lines.push("global.it = __orig;");
+    const p = path.join(ROOT, '.wdio_ui_tmp.js');
+    fs.writeFileSync(p, lines.join('\n'));
     return p;
 }
 
@@ -253,12 +272,19 @@ function broadcast(msg) {
 function buildArgs(suite, tests) {
     cleanTmp();
     const base = ['run', 'wdio.conf.js'];
-    if (!suite || suite === 'all') return base;
+
+    if (!suite || suite === 'all') {
+        _tmpSpec = buildTmpSpecUnrestricted(Object.values(SPEC_FILES));
+        return base.concat(['--spec', _tmpSpec]);
+    }
 
     const s = SUITES[suite];
     if (!s) return base;
 
-    if (!tests || tests.length === 0) return base.concat(['--spec', s.spec]);
+    if (!tests || tests.length === 0) {
+        _tmpSpec = buildTmpSpecUnrestricted([s.spec]);
+        return base.concat(['--spec', _tmpSpec]);
+    }
 
     _tmpSpec = buildTmpSpec(s.spec, tests);
     return base.concat(['--spec', _tmpSpec]);

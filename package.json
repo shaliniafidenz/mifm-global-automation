@@ -28,6 +28,7 @@
     "@wdio/visual-service": "^9.2.2",
     "appium": "^3.2.2",
     "appium-mcp": "^1.27.0",
-    "appium-uiautomator2-driver": "^7.4.0"
+    "appium-uiautomator2-driver": "^7.4.0",
+    "dotenv": "^17.4.2"
   }
 }

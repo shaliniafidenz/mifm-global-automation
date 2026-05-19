@@ -6,6 +6,7 @@ const footerPage = require('../pages/footer.page');
 const commonPage = require('../pages/common.page');
 const action = require('../utils/action.utils');
 const waitUtils = require('../utils/wait.utils');
+const cwoData = require('../fixtures/cwo.data');
 
 class CWOFlow{
 
@@ -34,13 +35,13 @@ class CWOFlow{
         await cwoLandingPage.tapCreateCWO();
 
         await cwoCreatePage.tapBuildingDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, '10 MBC');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, cwoData.create.building);
 
         await cwoCreatePage.tapLocationDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, '10 MBC L5');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, cwoData.create.location);
 
         await cwoCreatePage.tapProblemTypeDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, 'Aircon is not cold');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, cwoData.create.problemType);
 
         await cwoCreatePage.tapSubmitButton();
         await commonPage.waitForLoaderToDisappear();
@@ -49,7 +50,7 @@ class CWOFlow{
         const status = await cwoDetailsPage.getCWOStatusFromHeader();
 
         return { cwoNumber, status };
-        
+
     }
 
     async createCWOWithImageUpload(){
@@ -57,13 +58,13 @@ class CWOFlow{
         await cwoLandingPage.tapCreateCWO();
 
         await cwoCreatePage.tapBuildingDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, '10 MBC');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, cwoData.create.building);
 
         await cwoCreatePage.tapLocationDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, '10 MBC L5');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, cwoData.create.location);
 
         await cwoCreatePage.tapProblemTypeDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, 'Aircon is not cold');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, cwoData.create.problemType);
 
         await cwoCreatePage.tapAddPhotoTile();
         await cwoCreatePage.tapUploadFromGalleryOption();
@@ -143,19 +144,19 @@ class CWOFlow{
         await commonPage.selectRandomOption(cwoCreatePage.cwoRequesterDropdownOptions);
 
         await cwoCreatePage.tapBuildingDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, 'CW');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, cwoData.reset.building);
 
         await cwoCreatePage.tapLocationDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, 'CW');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, cwoData.reset.location);
 
         await cwoCreatePage.tapProblemTypeDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, 'Audio Visual');
-        
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, cwoData.reset.problemType);
+
         await cwoCreatePage.tapAssetDropdown();
         await commonPage.selectRandomOption(cwoCreatePage.cwoAssetDropdownOptions);
 
         await cwoCreatePage.tapDescriptionField();
-        await cwoCreatePage.enterDescription('This is a description for resetting CWO creation');
+        await cwoCreatePage.enterDescription(cwoData.reset.description);
         await driver.hideKeyboard();
 
         await cwoCreatePage.tapResetCWOButton();
