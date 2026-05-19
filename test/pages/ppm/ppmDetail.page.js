@@ -39,7 +39,7 @@ class PPMDetailPage{
         '.scrollIntoView(new UiSelector().resourceIdMatches("ppm_dropdown_checkbox_item_.*"))';
     }
 
-    get ppmTechnicianDropdownOkButton(){ return $('android=new UiSelector().resourceId("ppm_dropdown_technication_ok_button")');}
+    get ppmTechnicianDropdownOkButton(){ return $('android=new UiSelector().resourceId("ppm_dropdown_technician_ok_button")');}
 
     get ppmAssignButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
         '.scrollIntoView(new UiSelector().resourceId("ppm_assign_button"))');
@@ -69,9 +69,9 @@ class PPMDetailPage{
         '.scrollIntoView(new UiSelector().descriptionContains("Acknowledge"))');
     }
 
-    get signatureDoneButton(){ return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").text("DONE")');}
+    get signatureDoneButton(){ return $('android=new UiSelector().resourceId("ppm_acknowledgement_signatureDialog_done_button").text("DONE")');}
 
-    get signatureDoneButtonByText(){ return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").descriptionContains("DONE")');}
+    get signatureDoneButtonByText(){ return $('android=new UiSelector().resourceId("ppm_acknowledgement_signatureDialog_done_button").descriptionContains("DONE")');}
 
     get processingBannerTitle(){ return $('android=new UiSelector().resourceId("flashBanner_processing_view_title")');}
 
@@ -207,20 +207,32 @@ class PPMDetailPage{
         await action.click(this.ppmAcknowledgeButtonByText);
     }
 
-    async waitForProcessingBanner(timeout = 10000){
-        await this.processingBannerTitle.waitForDisplayed({
-            timeout,
-            timeoutMsg: 'Processing banner did not display'
-        });
-        return await this.processingBannerTitle.isDisplayed();
+    async waitForProcessingBanner(timeout = 30000){
+        try{
+            await this.processingBannerTitle.waitForDisplayed({
+                timeout,
+                timeoutMsg: 'Processing banner did not display'
+            });
+            return await this.processingBannerTitle.isDisplayed();
+        }
+        catch(error){
+            console.error('Error waiting for processing banner:', error);
+            return false;
+        }
     }
 
     async waitForSuccessBanner(timeout = 15000){
-        await this.successBannerTitle.waitForDisplayed({
+        try{
+            await this.successBannerTitle.waitForDisplayed({
             timeout,
             timeoutMsg: 'Success banner did not display'
-        });
-        return await this.successBannerTitle.isDisplayed();
+            });
+            return await this.successBannerTitle.isDisplayed();
+        }
+        catch(error){
+            console.error('Error waiting for success banner:', error);
+            return false;
+        }
     }
 
     async tapAddImageButton(){

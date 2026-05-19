@@ -275,6 +275,31 @@ class PPMFlow{
         };
     }
 
+    async createPPMAndMoveToInProgress(){
+        const createdPPM = await this.createPPM();
+
+        const supervisorName = await this.assignSupervisorToPendingPPM();
+        const supervisorAssignmentStatus = await ppmDetailsPage.getPPMStatusFromHeader();
+
+        const technicianName = await this.assignTechnicianToInProgressPPM();
+        const technicianAssignmentStatus = await ppmDetailsPage.getPPMStatusFromHeader();
+
+        const acknowledgement = await this.acknowledgePPM();
+
+        return {
+            createdPPM,
+            supervisorAssignment: {
+                supervisorName,
+                status: supervisorAssignmentStatus
+            },
+            technicianAssignment: {
+                technicianName,
+                status: technicianAssignmentStatus
+            },
+            acknowledgement
+        };
+    }
+
     async getNameByRoleFromPPMInfoTab(role){
 
         let username = null;

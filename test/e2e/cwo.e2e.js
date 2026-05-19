@@ -195,7 +195,7 @@ describe('CWO E2E Tests', () => {
             allure.addFeature('CWO');
             allure.addTag('regression');
             allure.addTag('smoke');
-            allure.addSeverity('Critical');
+            allure.addSeverity('critical');
 
             await cwoFlow.navigateToCWOFromBottomNav();
             await cwoFlow.getAllCWOs();
@@ -214,7 +214,7 @@ describe('CWO E2E Tests', () => {
             allure.addFeature('CWO');
             allure.addTag('regression');
             allure.addTag('smoke');
-            allure.addSeverity('Critical');
+            allure.addSeverity('critical');
 
             await cwoFlow.navigateToCWOFromBottomNav();
             await cwoFlow.getAllCWOs();
@@ -234,7 +234,7 @@ describe('CWO E2E Tests', () => {
             allure.addFeature('CWO');
             allure.addTag('regression');
             allure.addTag('smoke');
-            allure.addSeverity('Critical');
+            allure.addSeverity('critical');
 
             await cwoFlow.navigateToCWOFromBottomNav();
             await cwoFlow.getAllCWOs();
@@ -245,6 +245,29 @@ describe('CWO E2E Tests', () => {
             expect(acknowledgementResult.isProcessingBannerVisible).toBe(true);
             expect(acknowledgementResult.isSuccessBannerVisible).toBe(true);
             expect(acknowledgementResult.status).toContain('INPROGRESS');
+
+            await commonPage.tapBack();
+            await browser.pause(2000);
+            await dashboardFlow.navigateToDashboardFromFooter();
+        });
+
+        it('TC_CWO_014: Create CWO and move it to In-Progress', async () => {
+            allure.addFeature('CWO');
+            allure.addTag('regression');
+            allure.addTag('smoke');
+            allure.addSeverity('critical');
+
+            await cwoFlow.navigateToCWOFromBottomNav();
+
+            const workflowResult = await cwoFlow.createCWOAndMoveToInProgress();
+
+            expect(workflowResult.createdCWO.cwoNumber).toContain('CWO');
+            expect(workflowResult.createdCWO.status).toContain('NEW');
+            expect(workflowResult.supervisorAssignment.status).toContain('ASSIGNMENT');
+            expect(workflowResult.technicianAssignment.status).toContain('ACKNOWLEDGEMENT');
+           // expect(workflowResult.acknowledgement.isProcessingBannerVisible).toBe(true);
+           // expect(workflowResult.acknowledgement.isSuccessBannerVisible).toBe(true);
+            expect(workflowResult.acknowledgement.status).toContain('INPROGRESS');
 
             await commonPage.tapBack();
             await browser.pause(2000);

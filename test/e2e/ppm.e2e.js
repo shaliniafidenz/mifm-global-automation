@@ -236,6 +236,27 @@ describe('PPM E2E Tests', () => {
             await dashboardFlow.navigateToDashboardFromFooter();
         });
 
+        it('TC_PPM_015: Create PPM and move it to In-Progress', async () => {
+            allure.addFeature('PPM');
+            allure.addTag('regression');
+            allure.addTag('smoke');
+            allure.addSeverity('critical');
+
+            await ppmFlow.navigateToPPMFromBottomNav();
+
+            const workflowResult = await ppmFlow.createPPMAndMoveToInProgress();
+
+            expect(workflowResult.createdPPM.ppmNumber).toContain('PPM');
+            expect(workflowResult.createdPPM.status).toContain('NEW');
+            expect(workflowResult.supervisorAssignment.status).toContain('ASSIGNMENT');
+            expect(workflowResult.technicianAssignment.status).toContain('ACKNOWLEDGEMENT');
+            expect(workflowResult.acknowledgement.status).toContain('INPROGRESS');
+
+            await commonPage.tapBack();
+            await browser.pause(2000);
+            await dashboardFlow.navigateToDashboardFromFooter();
+        });
+
     });
 
 });

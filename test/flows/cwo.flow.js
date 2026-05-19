@@ -344,6 +344,23 @@ class CWOFlow{
             }
     }
 
+    async createCWOAndMoveToInProgress(){
+        const createdCWO = await this.createCWO();
+
+        const supervisorAssignment = await this.assignSupervisorToNewCWO();
+
+        const technicianAssignment = await this.assignTechnicianToAssignmentCWO();
+
+        const acknowledgement = await this.acknowledgeCWO();
+
+        return {
+            createdCWO,
+            supervisorAssignment,
+            technicianAssignment,
+            acknowledgement
+        };
+    }
+
     async assignSupervisorToNewCWO(){
         //Find the Supervisor element and apply filters to load supervisors in the dropdown, then select a random supervisor from the list and assign to the CWO
         await cwoDetailsPage.tapSelectAllFilter();

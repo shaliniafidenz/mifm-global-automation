@@ -75,8 +75,8 @@ exports.config = {
     capabilities: [{
         // capabilities for local Appium web tests on an Android Emulator
         platformName: 'Android',
-        'appium:deviceName': '2b74440c',
-        'appium:platformVersion': '13',
+        'appium:deviceName': 'R58M81ZYXKH',
+        'appium:platformVersion': '11',
         'appium:automationName': 'UiAutomator2',
         'appium:appPackage': 'com.certisgroup.mifmv2',
         'appium:appActivity': 'com.certisgroup.mifmv2.MainActivity',

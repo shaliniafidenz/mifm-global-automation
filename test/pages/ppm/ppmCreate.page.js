@@ -33,7 +33,7 @@ class PPMCreatePage{
     }
 
     get ppmChecklistDropdown(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
-        '.scrollIntoView(new UiSelector().resourceId("ppm_create_dropdown"))');
+        '.scrollIntoView(new UiSelector().resourceId("ppm_create_checklist_dropdown"))');
     }
     get ppmChecklistDropdownOptions(){
         return 'android=new UiSelector().resourceIdMatches(".*ppm_create_dropdown_list_item_.*")';
