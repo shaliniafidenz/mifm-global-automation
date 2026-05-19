@@ -11,17 +11,34 @@ const HTML = fs.readFileSync(path.join(__dirname, 'ui.html'), 'utf8');
 
 // ─── Parse spec files for describe / it hierarchy ────────────────────────────
 
+// Look ahead from startIdx into a test body to collect allure.addTag values.
+// Stops when brace depth goes negative (body closed) or after 20 lines.
+function extractTagsFromBody(lines, startIdx) {
+    const tags = [];
+    let depth  = 0;
+    for (let i = startIdx; i < Math.min(startIdx + 20, lines.length); i++) {
+        const ln = lines[i];
+        depth += (ln.match(/{/g) || []).length - (ln.match(/}/g) || []).length;
+        if (depth < 0) break;
+        const m = ln.match(/allure\.addTag\s*\(\s*['"`]([^'"`]+)['"`]/);
+        if (m) tags.push(m[1].toLowerCase());
+    }
+    return tags;
+}
+
 function parseSpecFile(specPath) {
     let content;
     try { content = fs.readFileSync(path.join(ROOT, specPath), 'utf8'); }
     catch (_) { return []; }
 
-    const root = { describes: [] };
+    const lines = content.split('\n');
+    const root  = { describes: [] };
     const stack = [root];
     let depth = 0;
     const descDepths = [];
 
-    for (const line of content.split('\n')) {
+    for (let i = 0; i < lines.length; i++) {
+        const line   = lines[i];
         const opens  = (line.match(/{/g)  || []).length;
         const closes = (line.match(/}/g) || []).length;
 
@@ -44,7 +61,10 @@ function parseSpecFile(specPath) {
         const im = line.match(/^\s*it(?:\.[a-z]+)?\s*\(\s*['"`](TC_[A-Z]+_\d+[:\s].+?)['"`]/);
         if (im && stack.length > 1) {
             const m2 = im[1].match(/^(TC_[A-Z]+_\d+)[:\s]*(.*)/);
-            if (m2) stack[stack.length - 1].tests.push({ id: m2[1], label: m2[2].trim() });
+            if (m2) {
+                const tags = extractTagsFromBody(lines, i + 1);
+                stack[stack.length - 1].tests.push({ id: m2[1], label: m2[2].trim(), tags });
+            }
         }
     }
 
@@ -64,6 +84,35 @@ const SUITES = {};
 Object.keys(SPEC_FILES).forEach(function (name) {
     SUITES[name] = { spec: SPEC_FILES[name], describes: parseSpecFile(SPEC_FILES[name]) };
 });
+
+function getAllTestsFlat(describes) {
+    const result = [];
+    function walk(nodes) {
+        nodes.forEach(function (d) {
+            d.tests.forEach(function (t) { result.push(t); });
+            if (d.describes) walk(d.describes);
+        });
+    }
+    walk(describes);
+    return result;
+}
+
+function computeGroups(suites) {
+    const groups = { Regression: {}, Other: {} };
+    Object.keys(suites).forEach(function (suiteName) {
+        getAllTestsFlat(suites[suiteName].describes).forEach(function (t) {
+            const bucket = (t.tags && t.tags.includes('regression')) ? 'Regression' : 'Other';
+            if (!groups[bucket][suiteName]) groups[bucket][suiteName] = [];
+            groups[bucket][suiteName].push(t.id);
+        });
+    });
+    Object.keys(groups).forEach(function (g) {
+        if (Object.keys(groups[g]).length === 0) delete groups[g];
+    });
+    return groups;
+}
+
+const GROUPS = computeGroups(SUITES);
 
 let activeRun = null;
 let _tmpSpec  = null;
@@ -112,7 +161,7 @@ const server = http.createServer(function (req, res) {
 
     if (method === 'GET' && pathname === '/api/suites') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(SUITES));
+        res.end(JSON.stringify({ suites: SUITES, groups: GROUPS }));
         return;
     }
 
@@ -250,10 +299,42 @@ function broadcast(msg) {
     });
 }
 
+function buildGroupTmpSpec(groupData) {
+    const allTcIds  = Object.keys(groupData).reduce(function (a, n) { return a.concat(groupData[n]); }, []);
+    const specPaths = Object.keys(groupData)
+        .filter(function (n) { return SUITES[n]; })
+        .map(function (n) { return path.join(ROOT, SUITES[n].spec).replace(/\\/g, '\\\\'); });
+
+    const src = [
+        "'use strict';",
+        'var __tcs  = ' + JSON.stringify(allTcIds) + ';',
+        'var __orig = global.it;',
+        'function __match(t) {',
+        '    return __tcs.some(function(tc) {',
+        "        return t === tc || t.indexOf(tc + ':') === 0 || t.indexOf(tc + ' ') === 0;",
+        '    });',
+        '}',
+        'global.it      = function(t, fn) { return __match(t) ? __orig(t, fn) : __orig(t); };',
+        'global.it.skip = function(t, fn) { return __match(t) ? __orig(t, fn) : __orig(t); };',
+        'global.it.only = __orig.only;',
+    ].concat(specPaths.map(function (p) { return "require('" + p + "');"; }))
+     .concat(['global.it = __orig;']).join('\n');
+
+    const p = path.join(ROOT, '.wdio_ui_tmp.js');
+    fs.writeFileSync(p, src);
+    return p;
+}
+
 function buildArgs(suite, tests) {
     cleanTmp();
     const base = ['run', 'wdio.conf.js'];
     if (!suite || suite === 'all') return base;
+
+    // Group run: single combined tmp spec that filters by tag-assigned TC IDs across all suites
+    if (GROUPS[suite]) {
+        _tmpSpec = buildGroupTmpSpec(GROUPS[suite]);
+        return base.concat(['--spec', _tmpSpec]);
+    }
 
     const s = SUITES[suite];
     if (!s) return base;
