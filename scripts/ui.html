@@ -1215,6 +1215,15 @@ function handleStep(data) {
             for (var ri = 0; ri < runResults.length; ri++) { if (runResults[ri].tcId === currentStepTcId) { _idx = ri; break; } }
             var _entry = { suiteName: currentStepSName, tcId: currentStepTcId, label: _label, status: data.passed ? 'pass' : 'fail', duration: data.duration };
             if (_idx >= 0) runResults[_idx] = _entry; else runResults.push(_entry);
+
+            // Update the sidebar tree icon via the step channel (reliable path).
+            // parseForResults also does this from terminal output but can miss when
+            // stdout arrives in fragments — this guarantees the icon always updates.
+            if (testStatus[currentStepSName]) {
+                testStatus[currentStepSName][currentStepTcId] = data.passed ? 'pass' : 'fail';
+            }
+            updateStatusIcons();
+
             renderResults();
             markTestHasHistory(currentStepSName, currentStepTcId);
         }
