@@ -144,8 +144,9 @@ exports.config = {
         ['appium', {
             command: 'appium',
             args: {
-            address: '127.0.0.1',
-            port: 4723
+                address: '127.0.0.1',
+                port: 4723,
+                relaxedSecurity: true,
             },
             logPath: './logs',
             waitStartTime: 5000, // 👈 add this (5 seconds)

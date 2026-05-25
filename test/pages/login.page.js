@@ -62,6 +62,14 @@ class LoginPage{
         await action.click(this.goBackButton);
     }
 
+    async waitForUsernameError(timeout = 10000){
+        await this.errorMessageUsername.waitForDisplayed({ timeout, timeoutMsg: 'Username error message did not appear after ' + timeout + ' ms' });
+    }
+
+    async waitForPasswordError(timeout = 10000){
+        await this.errorMessagePassword.waitForDisplayed({ timeout, timeoutMsg: 'Password error message did not appear after ' + timeout + ' ms' });
+    }
+
 }
 
 module.exports = new LoginPage();

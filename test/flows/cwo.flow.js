@@ -89,6 +89,40 @@ class CWOFlow{
         
     }
 
+    async createCWOWithCapturedImage(){
+        await cwoLandingPage.tapCreateCWO();
+
+        await cwoCreatePage.tapBuildingDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, cwoData.create.building);
+
+        await cwoCreatePage.tapLocationDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, cwoData.create.location);
+
+        await cwoCreatePage.tapProblemTypeDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, cwoData.create.problemType);
+
+        await cwoCreatePage.tapAddPhotoTile();
+        await cwoCreatePage.tapCapturePhotoOption();
+        await cwoCreatePage.waitForManualCapture(); // pauses until you capture + confirm in camera
+
+        await cwoCreatePage.confirmPreview();
+
+        await browser.pause(2000);
+
+        const imageName = (await action.getContentDescription(cwoCreatePage.uploadedImageThumbBox)).split('\n')[2];
+
+        await cwoCreatePage.tapSubmitButton();
+        await commonPage.waitForLoaderToDisappear();
+
+        await waitUtils.waitToDisappear(cwoDetailsPage.processingBannerTitle, 10000);
+        await waitUtils.waitToDisappear(cwoDetailsPage.successBannerTitle, 10000);
+
+        const cwoNumber = await cwoDetailsPage.getCWONumberFromHeader();
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+
+        return { cwoNumber, status, imageName };
+    }
+
     async getImageNameFromAttachmentsTab(){
 
         await cwoDetailsPage.tapAttachmentsTab();

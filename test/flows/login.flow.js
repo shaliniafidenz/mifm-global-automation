@@ -43,6 +43,7 @@ class LoginFlow {
         try{
             await loginPage.enterUsername('');
             await loginPage.tapLogin();
+            await loginPage.waitForUsernameError();
 
             const userNameVisible = await loginPage.isUsernameVisible();
             const errorMessageVisible = await loginPage.isUsernameErrorMessageVisible();
@@ -63,6 +64,7 @@ class LoginFlow {
         try{
             await loginPage.enterUsername(loginData.invalidUser.username);
             await loginPage.tapLogin();
+            await loginPage.waitForUsernameError();
 
             const userNameVisible = await loginPage.isUsernameVisible();
             const errorMessageVisible = await loginPage.isUsernameErrorMessageVisible();
@@ -81,6 +83,7 @@ class LoginFlow {
         try{
             await loginPage.enterPassword('');
             await loginPage.tapLogin();
+            await loginPage.waitForPasswordError();
 
             const passwordVisible = await loginPage.isPasswordVisible();
             const errorMessageVisible = await loginPage.isPasswordErrorMessageVisible();
@@ -99,6 +102,7 @@ class LoginFlow {
         try{
             await loginPage.enterPassword(loginData.invalidUser.password);
             await loginPage.tapLogin();
+            await loginPage.waitForPasswordError();
 
             const passwordVisible = await loginPage.isPasswordVisible();
             const errorMessageVisible = await loginPage.isPasswordErrorMessageVisible();

@@ -130,13 +130,11 @@ describe('CWO E2E Tests', () => {
             await dashboardFlow.navigateToDashboardFromFooter();
         });
 
-        it.skip('TC_CWO_007: Create a new CWO with uploading image', async () => {
+        it.skip('TC_CWO_007: Create a new CWO with capturing image', async () => {
             allure.addFeature('CWO');
             allure.addSeverity('Critical');
             allure.addTag('smoke');
             allure.addTag('regression');
-
-            await mediaHelper.pushTestImageToDevice();
 
             await cwoFlow.navigateToCWOFromBottomNav();
 
@@ -144,7 +142,7 @@ describe('CWO E2E Tests', () => {
             expect(isCWOCreateButtonVisible).toBe(true);
 
             if (isCWOCreateButtonVisible) {
-                const cwoDetailsHeader = await cwoFlow.createCWOWithImageUpload();
+                const cwoDetailsHeader = await cwoFlow.createCWOWithCapturedImage();
                 console.log('CWO Details Header Text:', cwoDetailsHeader);
 
                 expect(cwoDetailsHeader.cwoNumber).toContain('CWO');
