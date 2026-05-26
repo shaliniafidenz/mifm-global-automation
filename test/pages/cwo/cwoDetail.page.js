@@ -57,11 +57,22 @@ class CWODetailPage{
     }
 
     get cwoAcknowledgeButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
-        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))'); 
+        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))');
     }
 
     get cwoAcknowledgeButtonByText(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
-        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))'); 
+        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))');
+    }
+
+    // Reject button — visible on Assignment-status CWOs; requires scrolling to reach
+    get cwoRejectButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("cwo_reject_button"))');
+    }
+
+    // App-bar Back button on the CWO detail screen (android.widget.Button, content-desc="Back").
+    // More specific than commonPage.backButton (~Back) which can match other views.
+    get detailBackButton(){
+        return $('android=new UiSelector().className("android.widget.Button").description("Back")');
     }
 
     get signatureDoneButton(){ return $('android=new UiSelector().resourceId("cwo_acknowledgement_signatureDialog_done_button").text("DONE")');}
@@ -179,6 +190,26 @@ class CWODetailPage{
         }
 
         await action.click(this.cwoAcknowledgeButtonByText);
+    }
+
+    async tapRejectButton(){
+        await action.click(this.cwoRejectButton);
+    }
+
+    async tapDetailBackButton(){
+        await action.click(this.detailBackButton);
+    }
+
+    // Returns true when the status chip in the app bar shows "NEW".
+    // Used to detect the auto-navigation the app performs after a rejection.
+    async isNewStatusVisible(){
+        try{
+            const desc = await action.getContentDescription(this.cwoStatus);
+            return desc.includes('NEW');
+        }
+        catch(e){
+            return false;
+        }
     }
 
     async waitForProcessingBanner(timeout = 3000){

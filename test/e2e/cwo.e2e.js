@@ -249,6 +249,53 @@ describe('CWO E2E Tests', () => {
             await dashboardFlow.navigateToDashboardFromFooter();
         });
 
+        it('TC_CWO_014: Create a CWO, assign supervisor, navigate to Assignment tab and reject', async () => {
+            allure.addFeature('CWO');
+            allure.addTag('regression');
+            allure.addTag('smoke');
+            allure.addSeverity('Critical');
+
+            // ── Step 1: Navigate to CWO list ────────────────────────────────
+            await cwoFlow.navigateToCWOFromBottomNav();
+
+            // ── Step 2: Create a new CWO ─────────────────────────────────────
+            const isCWOCreateButtonVisible = await cwoLandingPage.isCWOCreateButtonVisible();
+            expect(isCWOCreateButtonVisible).toBe(true);
+
+            const cwoDetails = await cwoFlow.createCWO();
+            console.log('Created CWO:', cwoDetails.cwoNumber, '| Status:', cwoDetails.status);
+            expect(cwoDetails.cwoNumber).toContain('CWO');
+            expect(cwoDetails.status).toContain('NEW');
+
+            // ── Step 3: Assign supervisor (still on the CWO detail page) ─────
+            const assignResult = await cwoFlow.assignSupervisorToNewCWO();
+            console.log('Supervisor assigned:', assignResult.supervisorName, '| Status:', assignResult.status);
+            expect(assignResult.status).toContain('ASSIGNMENT');
+
+            // ── Step 4: Return to CWO list and show all CWOs ─────────────────
+            await commonPage.tapBack();
+            await browser.pause(2000);
+            await cwoFlow.getAllCWOs();
+
+            // ── Step 5: Open the first CWO from the Assignment tab ───────────
+            await cwoFlow.tapWorkOrderFromTheListByStatus('Assignment');
+
+            // ── Step 6: Scroll down and tap the Reject button ────────────────
+            const rejectResult = await cwoFlow.rejectCWO();
+            console.log('Reject result | status:', rejectResult.status);
+
+            // The app auto-navigates to the NEW-status detail page after rejection —
+            // that navigation is the confirmation the rejection succeeded.
+            expect(rejectResult.status).toContain('NEW');
+
+            // ── Cleanup: return to dashboard ──────────────────────────────────
+            // After rejection the app auto-navigates to the CWO detail page with
+            // NEW status; navigateBackFromRejectedCWO() handles that transition
+            // back to the CWO landing list before we tap the home footer button.
+            await cwoFlow.navigateBackFromRejectedCWO();
+            await dashboardFlow.navigateToDashboardFromFooter();
+        });
+
     });
 
 });

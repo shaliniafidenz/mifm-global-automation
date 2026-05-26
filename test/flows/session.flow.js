@@ -1,10 +1,7 @@
 const loginPage = require('../pages/login.page');
 const loginData = require('../fixtures/login.data');
 const loginFlow = require('./login.flow');
-const headerPage = require('../pages/header.page');
 const footerPage = require('../pages/footer.page');
-const commonPage = require('../pages/common.page');
-const waitUtils = require('../utils/wait.utils');
 const action = require('../utils/action.utils');
 const appLauncher = require('../utils/appLauncher.utils');
 
@@ -107,10 +104,10 @@ class SessionFlow{
             if(await this.isDashboardDisplayed()){
                 console.log('Logged in, dashboard is displayed. Calling the logout flow.');
 
+                // loginFlow.logout() already calls commonPage.waitForLoaderToDisappear()
+                // internally — do not wait for the loader again here or you get a stale
+                // element reference error ("does not exist in DOM anymore").
                 await loginFlow.logout();
-
-                const loader = await commonPage.loader;
-                await waitUtils.waitToDisappear(loader,10000);
             }
 
         }

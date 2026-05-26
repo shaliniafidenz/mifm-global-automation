@@ -12,6 +12,10 @@ class LoginPage{
     get homeTitle(){ return $('android=new UiSelector().resourceId("dashboard_title_label")');}
     get loader(){ return $('android=new UiSelector().resourceId("dashboard_loader")');}
 
+    // Login page title shown in the Mozart WebView ("Sign in to IFM DEV")
+    get loginPageTitle(){ return $('android=new UiSelector().text("Sign in to IFM DEV")');}
+
+
     async enterUsername(username){
         //await this.usernameField.setValue(username);
         await action.type(this.usernameField, username);
@@ -56,6 +60,17 @@ class LoginPage{
 
     async isPasswordErrorMessageVisible(){
         return await action.isDisplayed(this.errorMessagePassword);
+    }
+
+    async isLoginPageTitleVisible(){
+        return await action.isDisplayed(this.loginPageTitle);
+    }
+
+    async waitForUsernameField(timeout = 8000){
+        await this.usernameField.waitForDisplayed({
+            timeout,
+            timeoutMsg: `Email/username field did not appear within ${timeout}ms after back navigation`,
+        });
     }
 
     async resetLogin(){

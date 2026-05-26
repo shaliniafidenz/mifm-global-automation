@@ -434,6 +434,48 @@ class CWOFlow{
 
     }
 
+    async rejectCWO(){
+        // Allow the CWO detail screen to fully render before scrolling
+        await browser.pause(3000);
+
+        // UiScrollable in the getter scrolls down to the button automatically
+        await cwoDetailsPage.tapRejectButton();
+
+        // After rejection the app immediately auto-navigates to the CWO detail
+        // page showing the reverted NEW status.  The processing/success banners
+        // appear and disappear faster than a poll can reliably catch them, so we
+        // don't assert them here.  Instead we wait for the navigation to settle
+        // and verify the resulting status.
+        await browser.pause(6000);
+
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+        return { status };
+    }
+
+    /**
+     * After a CWO is rejected the app auto-navigates to the CWO detail page
+     * showing the reverted NEW status.  This helper:
+     *  1. Checks whether the NEW-status chip is visible in the app bar.
+     *  2. If yes → taps the app-bar Back button (android.widget.Button "Back")
+     *             to return to the CWO landing list.
+     *  3. If not visible → falls back to the generic back action.
+     *  Call this immediately after rejectCWO() before navigating to the dashboard.
+     */
+    async navigateBackFromRejectedCWO(){
+        await browser.pause(2000); // let the post-rejection transition settle
+
+        const isNewStatus = await cwoDetailsPage.isNewStatusVisible();
+        if(isNewStatus){
+            console.log('Rejected CWO reverted to NEW status — tapping app-bar Back to return to CWO list.');
+            await cwoDetailsPage.tapDetailBackButton();
+        } else {
+            console.log('NEW status not detected — using generic back navigation.');
+            await commonPage.tapBack();
+        }
+
+        await browser.pause(2000); // allow CWO landing page to fully render
+    }
+
     async assignTechnicianToAssignmentCWO(){
 
         //Find the Supervisor element and apply filters to load supervisors in the dropdown, then select a random supervisor from the list and assign to the CWO
