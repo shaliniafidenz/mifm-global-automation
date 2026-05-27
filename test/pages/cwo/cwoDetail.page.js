@@ -84,16 +84,22 @@ class CWODetailPage{
     get successBannerTitle(){ return $('android=new UiSelector().resourceId("flashBanner_success_view_title")');}
 
 
-    // Plain selectors — used AFTER scrollToBottomOfInfoTab() has already
-    // scrolled the inner android.widget.ScrollView to the bottom.
-    // Keeping scroll and lookup separate avoids the two-UiScrollable conflict
-    // that caused the "only scrolls halfway" failure.
+    // Two-phase scroll strategy:
+    //   Phase 1 — scrollToBottomOfInfoTab() runs two scrollToEnd(20) passes
+    //             to coarsely advance the ScrollView near the end.
+    //   Phase 2 — these getters use scrollIntoView() for a precise final scroll
+    //             that moves the ScrollView until the target element is actually
+    //             in the rendered viewport.  Plain UiSelector alone only matches
+    //             elements already on-screen, which is why it failed when the
+    //             element sat just outside the viewport after the blind scroll.
     get cwoInfoSupervisorValue(){
-        return 'android=new UiSelector().resourceId("cwoAdditionalInformationTab_supervisor_value")';
+        return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
+               '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_supervisor_value"))';
     }
 
     get cwoInfoTechnicianValue(){
-        return 'android=new UiSelector().resourceId("cwoAdditionalInformationTab_technician_value")';
+        return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
+               '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_technician_value"))';
     }
 
     get cwoAttachmentBox(){
@@ -245,10 +251,11 @@ class CWODetailPage{
     }
 
     async scrollToBottomOfInfoTab() {
-        // Two scroll passes are required: the first pass scrolls through the
-        // main content; the second ensures the supervisor / technician row
-        // (which may be dynamically rendered after the first scroll settles)
-        // is fully in view.
+        // Phase-1 coarse scroll: two scrollToEnd passes advance the ScrollView
+        // close to the bottom so that the scrollIntoView in the element getter
+        // (phase 2) only needs a small adjustment rather than scrolling the full
+        // list from the top.  Running two passes handles cases where the content
+        // is lazy-rendered and the first pass exposes new rows.
         const scrollCmd =
             'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
             '.scrollToEnd(20)';
@@ -256,7 +263,7 @@ class CWODetailPage{
         try {
             await $(scrollCmd);           // first pass
             await browser.pause(800);
-            await $(scrollCmd);           // second pass — brings the supervisor row into view
+            await $(scrollCmd);           // second pass — exposes late-rendered rows
             await browser.pause(1000);
         } catch (e) {
             console.warn('Info tab scroll-to-end failed, continuing...', e.message);
