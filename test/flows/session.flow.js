@@ -1,10 +1,7 @@
 const loginPage = require('../pages/login.page');
 const loginData = require('../fixtures/login.data');
 const loginFlow = require('./login.flow');
-const headerPage = require('../pages/header.page');
 const footerPage = require('../pages/footer.page');
-const commonPage = require('../pages/common.page');
-const waitUtils = require('../utils/wait.utils');
 const action = require('../utils/action.utils');
 const appLauncher = require('../utils/appLauncher.utils');
 
@@ -12,21 +9,19 @@ class SessionFlow{
 
     async waitForAppToLoad(timeout = 60000){
         try{
-            await browser.pause(5000); // Pause to allow any loader to appear
-            await waitUtils.waitForDisplayed(loginPage.loader);
-            console.log('Loader appeared, waiting for it to disappear.');
-
-            await loginPage.loader.waitForDisplayed({
-                reverse: true,
-                timeout: timeout,
-                timeoutMsg: 'Loader did not disappear after ' + timeout + ' ms'
-            });
-            console.log('Loader disappeared, app is ready.');
-            
-            
+            await browser.waitUntil(
+                async () => {
+                    const loginVisible = await action.isDisplayedSafe(loginPage.loginButton);
+                    if (loginVisible) return true;
+                    const dashVisible = await action.isDisplayedSafe(footerPage.homeFooterIcon);
+                    return dashVisible;
+                },
+                { timeout, interval: 1000, timeoutMsg: 'App did not reach a stable state after ' + timeout + ' ms' }
+            );
+            console.log('App reached a stable state.');
         }
         catch(error){
-            console.error('Error waiting for loader to disappear:', error);
+            console.error('Error waiting for app to reach stable state:', error);
         }
     }
 
@@ -67,7 +62,7 @@ class SessionFlow{
             console.log('Login page is displayed, performing login.');
 
             await loginFlow.login(loginData.validUser.username, loginData.validUser.password);
-            await this.waitForAppToLoad();
+            await this.waitForDashboard();
 
             if(!(await this.isDashboardDisplayed())){
                 throw new Error('Login failed, dashboard is not displayed after login attempt.');
@@ -80,6 +75,20 @@ class SessionFlow{
         
         throw new Error('Unknown app state: neither login page nor dashboard is displayed.');
        
+    }
+
+    async waitForDashboard(timeout = 60000){
+        try{
+            const homeFooterIcon = footerPage.homeFooterIcon;
+            await homeFooterIcon.waitForDisplayed({
+                timeout,
+                timeoutMsg: 'Dashboard home footer did not appear after ' + timeout + ' ms'
+            });
+            console.log('Dashboard is ready.');
+        }
+        catch(error){
+            console.error('Error waiting for dashboard:', error);
+        }
     }
 
     async logoutIfNeeded(){
@@ -95,10 +104,10 @@ class SessionFlow{
             if(await this.isDashboardDisplayed()){
                 console.log('Logged in, dashboard is displayed. Calling the logout flow.');
 
+                // loginFlow.logout() already calls commonPage.waitForLoaderToDisappear()
+                // internally — do not wait for the loader again here or you get a stale
+                // element reference error ("does not exist in DOM anymore").
                 await loginFlow.logout();
-
-                const loader = await commonPage.loader;
-                await waitUtils.waitToDisappear(loader,10000);
             }
 
         }

@@ -103,6 +103,26 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 }
 .theme-btn:hover{background:rgba(128,128,128,.15);color:var(--text)}
 
+.btn-report{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 11px;border-radius:4px;border:none;
+  background:rgba(78,201,176,.12);color:var(--green);
+  font-size:11px;font-weight:500;cursor:pointer;
+  transition:background .12s;flex-shrink:0;
+}
+.btn-report:hover:not([disabled]){background:rgba(78,201,176,.25)}
+.btn-report[disabled]{opacity:.4;cursor:not-allowed}
+
+.btn-clear-results{
+  display:flex;align-items:center;gap:5px;
+  padding:4px 11px;border-radius:4px;border:none;
+  background:rgba(244,125,125,.12);color:var(--red);
+  font-size:11px;font-weight:500;cursor:pointer;
+  transition:background .12s;flex-shrink:0;
+}
+.btn-clear-results:hover:not([disabled]){background:rgba(244,125,125,.25)}
+.btn-clear-results[disabled]{opacity:.4;cursor:not-allowed}
+
 /* ── Steps pane ── */
 .steps-pane{
   width:270px;min-width:180px;
@@ -410,6 +430,36 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 }
 .suite-status.pass{color:var(--green)}
 .suite-status.fail{color:var(--red)}
+
+/* ── Device panel ── */
+.devices-section{border-bottom:1px solid var(--border);flex-shrink:0}
+.devices-hdr{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 8px 6px 14px;cursor:pointer;user-select:none;
+}
+.devices-hdr:hover{background:rgba(255,255,255,.03)}
+.dev-hint{font-size:10px;color:var(--dim);flex:1;text-align:right;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:2px}
+.icon-btn{
+  width:22px;height:22px;border-radius:3px;border:none;
+  background:transparent;color:var(--dim);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;line-height:1;transition:background .12s,color .12s;flex-shrink:0;
+}
+.icon-btn:hover{background:rgba(128,128,128,.15);color:var(--text)}
+@keyframes spin-icon{to{transform:rotate(360deg)}}
+.icon-btn.spinning{animation:spin-icon .7s linear infinite;pointer-events:none}
+.devices-body{padding:2px 8px 6px}
+.device-row{
+  display:flex;align-items:center;gap:8px;
+  padding:4px 6px;border-radius:4px;cursor:pointer;user-select:none;
+}
+.device-row:hover{background:rgba(255,255,255,.04)}
+.dev-check{accent-color:var(--accent);width:13px;height:13px;flex-shrink:0;cursor:pointer}
+.dev-info{display:flex;flex-direction:column;min-width:0;flex:1}
+.dev-model{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dev-meta{font-size:10.5px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dev-placeholder{padding:4px 6px 3px;font-size:11.5px;color:var(--dim)}
 </style>
 </head>
 <body>
@@ -424,12 +474,39 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
       Appium Test Runner
     </div>
     <span class="pill pill-idle" id="pill">Idle</span>
+    <button class="btn-clear-results" id="btnClearResults" onclick="clearResults()" title="Delete all Allure results and reports">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      Clear Results
+    </button>
+    <button class="btn-report" id="btnViewReport" onclick="viewReport()" title="Generate and open Allure report">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      View Report
+    </button>
     <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle dark / light mode"></button>
   </div>
 
   <div class="workspace">
 
     <aside class="sidebar">
+
+      <div class="devices-section">
+        <div class="devices-hdr" onclick="toggleDevicesPanel()">
+          <span class="sec-label">Devices</span>
+          <span class="dev-hint" id="devHint"></span>
+          <button class="icon-btn" id="btnRefreshDevices" onclick="event.stopPropagation();refreshDevices()" title="Refresh devices">&#8635;</button>
+          <span class="chevron" id="devicesChevron" style="transition:transform .18s ease">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+          </span>
+        </div>
+        <div id="devicesBody">
+          <div class="devices-body">
+            <div class="devices-list" id="devicesList">
+              <div class="dev-placeholder">Scanning...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="suites-hdr">
         <span class="sec-label">Suites</span>
         <div class="hdr-actions">
@@ -528,6 +605,11 @@ var _logBuffer  = '';
 var _logRafId   = null;
 var MAX_LOG_HTML = 400000; // ~400 KB of rendered HTML before trimming
 
+var availableDevices = [];   // [{ id, model, version }] from /api/devices
+var selectedDevices  = [];   // subset chosen by the user
+var devicesOpen      = true;
+var devicesLoading   = false;
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 var tcIndex = {}; // { tcId: { suiteName, label } } — built once after suites load
@@ -622,6 +704,103 @@ fetch('/api/suites').then(function(r){ return r.json(); }).then(function(data){
 }).then(function(r){ return r.json(); }).then(function(s){
     if (s.running) { setRunning(true); connectStream(); }
 }).catch(function(){});
+
+fetchDevices();
+
+// ── Device panel ──────────────────────────────────────────────────────────────
+
+function fetchDevices() {
+    if (devicesLoading) return;
+    devicesLoading = true;
+    var btn = document.getElementById('btnRefreshDevices');
+    if (btn) { btn.classList.add('spinning'); btn.disabled = true; }
+
+    fetch('/api/devices').then(function(r) { return r.json(); }).then(function(data) {
+        availableDevices = data;
+        // Keep only still-connected selected devices; auto-select first if nothing chosen
+        selectedDevices = selectedDevices.filter(function(s) {
+            return data.some(function(d) { return d.id === s.id; });
+        });
+        if (selectedDevices.length === 0 && data.length > 0) selectedDevices = [data[0]];
+        renderDevices();
+    }).catch(function() {
+        availableDevices = [];
+        renderDevices();
+    }).then(function() {
+        devicesLoading = false;
+        var btn = document.getElementById('btnRefreshDevices');
+        if (btn) { btn.classList.remove('spinning'); btn.disabled = false; }
+    });
+}
+
+function renderDevices() {
+    var list = document.getElementById('devicesList');
+    var hint = document.getElementById('devHint');
+    if (!list) return;
+
+    if (availableDevices.length === 0) {
+        list.innerHTML = '<div class="dev-placeholder">No devices — using .env defaults</div>';
+        if (hint) hint.textContent = '';
+        return;
+    }
+
+    var html = '';
+    availableDevices.forEach(function(d) {
+        var checked = selectedDevices.some(function(s) { return s.id === d.id; });
+        html += '<label class="device-row">'
+            + '<input type="checkbox" class="dev-check"' + (checked ? ' checked' : '')
+            + ' onchange="onDeviceToggle(\'' + escHtml(d.id) + '\',this.checked)">'
+            + '<div class="dev-info">'
+            + '<span class="dev-model">' + escHtml(d.model) + '</span>'
+            + '<span class="dev-meta">' + escHtml(d.id) + ' &nbsp;·&nbsp; Android ' + escHtml(d.version) + '</span>'
+            + '</div></label>';
+    });
+    list.innerHTML = html;
+
+    if (hint) {
+        var n = selectedDevices.length;
+        hint.textContent = n === 0 ? 'using .env defaults'
+            : n === 1 ? selectedDevices[0].model
+            : n + ' devices';
+    }
+}
+
+function onDeviceToggle(id, checked) {
+    if (checked) {
+        var dev = null;
+        for (var i = 0; i < availableDevices.length; i++) {
+            if (availableDevices[i].id === id) { dev = availableDevices[i]; break; }
+        }
+        if (dev && !selectedDevices.some(function(s) { return s.id === id; })) {
+            selectedDevices.push(dev);
+        }
+    } else {
+        selectedDevices = selectedDevices.filter(function(s) { return s.id !== id; });
+    }
+    var hint = document.getElementById('devHint');
+    if (hint) {
+        var n = selectedDevices.length;
+        hint.textContent = n === 0 ? 'using .env defaults'
+            : n === 1 ? selectedDevices[0].model
+            : n + ' devices';
+    }
+}
+
+function toggleDevicesPanel() {
+    devicesOpen = !devicesOpen;
+    document.getElementById('devicesBody').style.display = devicesOpen ? '' : 'none';
+    var ch = document.getElementById('devicesChevron');
+    if (ch) ch.style.transform = devicesOpen ? 'rotate(90deg)' : 'rotate(0deg)';
+}
+
+function refreshDevices() {
+    availableDevices = [];
+    selectedDevices  = [];
+    document.getElementById('devicesList').innerHTML = '<div class="dev-placeholder">Scanning...</div>';
+    var hint = document.getElementById('devHint');
+    if (hint) hint.textContent = '';
+    fetchDevices();
+}
 
 // ── Tree render ───────────────────────────────────────────────────────────────
 
@@ -901,6 +1080,7 @@ function runTest(suiteName, testId) {
 
 function startRun(payload) {
     if (running) return;
+    payload.devices = selectedDevices.length > 0 ? selectedDevices : [];
     clearLog(false);        // wipe log and reset testStatus first
     resetStatus(payload);   // mark targets as 'running'
     _reconnectAttempts = 0;
@@ -926,6 +1106,42 @@ function stopRun() {
     fetch('/api/stop', { method: 'POST' });
 }
 
+function viewReport() {
+    var btn = document.getElementById('btnViewReport');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="width:10px;height:10px;border-width:1.5px"></span> Generating...';
+    fetch('/api/report', { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.ok) {
+                window.open(data.url, '_blank');
+            } else {
+                alert('Could not generate report:\n' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(function(err) { alert('Error: ' + err.message); })
+        .finally(function() {
+            btn.disabled = running;
+            btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg> View Report';
+        });
+}
+
+function clearResults() {
+    var btn = document.getElementById('btnClearResults');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="width:10px;height:10px;border-width:1.5px"></span> Clearing...';
+    fetch('/api/clean-results', { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data.ok) alert('Could not clear results:\n' + (data.error || 'Unknown error'));
+        })
+        .catch(function(err) { alert('Error: ' + err.message); })
+        .finally(function() {
+            btn.disabled = running;
+            btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg> Clear Results';
+        });
+}
+
 // ── SSE stream ────────────────────────────────────────────────────────────────
 
 function connectStream() {
@@ -941,13 +1157,28 @@ function connectStream() {
         } else if (msg.type === 'done') {
             _reconnectAttempts = 0;
             if (_reconnectTimer) { clearTimeout(_reconnectTimer); _reconnectTimer = null; }
-            // Any test still 'running' wasn't reported (stopped / skipped) → idle
+            // Any test still 'running' never got a testEnd event (e.g. before-all hook failure).
+            // If the run failed, mark them as fail and add to runResults so they appear in Results tab.
             Object.keys(testStatus).forEach(function(name) {
                 Object.keys(testStatus[name]).forEach(function(id) {
-                    if (testStatus[name][id] === 'running') testStatus[name][id] = 'idle';
+                    if (testStatus[name][id] !== 'running') return;
+                    if (msg.code !== 0) {
+                        testStatus[name][id] = 'fail';
+                        var existing = -1;
+                        for (var ri = 0; ri < runResults.length; ri++) {
+                            if (runResults[ri].tcId === id) { existing = ri; break; }
+                        }
+                        var _lbl = (tcIndex[id] || {}).label || '';
+                        var _entry = { suiteName: name, tcId: id, label: _lbl, status: 'fail', duration: null };
+                        if (existing >= 0) runResults[existing] = _entry;
+                        else runResults.push(_entry);
+                    } else {
+                        testStatus[name][id] = 'idle';
+                    }
                 });
             });
             updateStatusIcons();
+            renderResults();
             setRunning(false);
             es.close(); es = null;
             var pill = document.getElementById('pill');
@@ -1109,6 +1340,8 @@ document.getElementById('log').addEventListener('scroll', function() {
 function setRunning(val) {
     running = val;
     document.getElementById('btnRunAll').disabled = val;
+    document.getElementById('btnViewReport').disabled = val;
+    document.getElementById('btnClearResults').disabled = val;
     document.getElementById('btnHdrStop').style.display = val ? 'flex' : 'none';
     document.getElementById('stopBar').style.display = val ? 'block' : 'none';
     if (val) {
@@ -1215,6 +1448,15 @@ function handleStep(data) {
             for (var ri = 0; ri < runResults.length; ri++) { if (runResults[ri].tcId === currentStepTcId) { _idx = ri; break; } }
             var _entry = { suiteName: currentStepSName, tcId: currentStepTcId, label: _label, status: data.passed ? 'pass' : 'fail', duration: data.duration };
             if (_idx >= 0) runResults[_idx] = _entry; else runResults.push(_entry);
+
+            // Update the sidebar tree icon via the step channel (reliable path).
+            // parseForResults also does this from terminal output but can miss when
+            // stdout arrives in fragments — this guarantees the icon always updates.
+            if (testStatus[currentStepSName]) {
+                testStatus[currentStepSName][currentStepTcId] = data.passed ? 'pass' : 'fail';
+            }
+            updateStatusIcons();
+
             renderResults();
             markTestHasHistory(currentStepSName, currentStepTcId);
         }
@@ -1338,6 +1580,9 @@ function toggleTheme() {
     if (saved === 'light') document.body.classList.add('light');
     var btn = document.getElementById('themeBtn');
     if (btn) btn.innerHTML = (saved === 'light') ? icoMoon() : icoSun();
+    // Devices chevron starts open
+    var ch = document.getElementById('devicesChevron');
+    if (ch) ch.style.transform = 'rotate(90deg)';
 })();
 </script>
 </body>

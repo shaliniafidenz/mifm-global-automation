@@ -19,7 +19,13 @@ class MediaHelper {
         // Overwrites if already exists — no cleanup needed
         await driver.pushFile(devicePath, imageData);
 
-        // Give the OS time to naturally index the new file
+        // ACTION_MEDIA_SCANNER_SCAN_FILE is ignored on Android 10+ (returns result=0).
+        // 'content call --method scan_file' is the correct approach for Android 10+.
+        await driver.execute('mobile: shell', {
+            command: 'content',
+            args: ['call', '--uri', 'content://media', '--method', 'scan_file', '--arg', devicePath],
+        });
+
         await browser.pause(3000);
         return devicePath;
     }

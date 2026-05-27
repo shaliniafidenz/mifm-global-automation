@@ -57,11 +57,22 @@ class CWODetailPage{
     }
 
     get cwoAcknowledgeButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
-        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))'); 
+        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))');
     }
 
     get cwoAcknowledgeButtonByText(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
-        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))'); 
+        '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))');
+    }
+
+    // Reject button — visible on Assignment-status CWOs; requires scrolling to reach
+    get cwoRejectButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("cwo_reject_button"))');
+    }
+
+    // App-bar Back button on the CWO detail screen (android.widget.Button, content-desc="Back").
+    // More specific than commonPage.backButton (~Back) which can match other views.
+    get detailBackButton(){
+        return $('android=new UiSelector().className("android.widget.Button").description("Back")');
     }
 
     get signatureDoneButton(){ return $('android=new UiSelector().resourceId("cwo_acknowledgement_signatureDialog_done_button").text("DONE")');}
@@ -73,12 +84,22 @@ class CWODetailPage{
     get successBannerTitle(){ return $('android=new UiSelector().resourceId("flashBanner_success_view_title")');}
 
 
-    get cwoInfoSupervisorValue(){ return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
-        '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_supervisor_value"))'; 
+    // Two-phase scroll strategy:
+    //   Phase 1 — scrollToBottomOfInfoTab() runs two scrollToEnd(20) passes
+    //             to coarsely advance the ScrollView near the end.
+    //   Phase 2 — these getters use scrollIntoView() for a precise final scroll
+    //             that moves the ScrollView until the target element is actually
+    //             in the rendered viewport.  Plain UiSelector alone only matches
+    //             elements already on-screen, which is why it failed when the
+    //             element sat just outside the viewport after the blind scroll.
+    get cwoInfoSupervisorValue(){
+        return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
+               '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_supervisor_value"))';
     }
 
-    get cwoInfoTechnicianValue(){ return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
-        '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_technician_value"))'; 
+    get cwoInfoTechnicianValue(){
+        return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
+               '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_technician_value"))';
     }
 
     get cwoAttachmentBox(){
@@ -181,6 +202,26 @@ class CWODetailPage{
         await action.click(this.cwoAcknowledgeButtonByText);
     }
 
+    async tapRejectButton(){
+        await action.click(this.cwoRejectButton);
+    }
+
+    async tapDetailBackButton(){
+        await action.click(this.detailBackButton);
+    }
+
+    // Returns true when the status chip in the app bar shows "NEW".
+    // Used to detect the auto-navigation the app performs after a rejection.
+    async isNewStatusVisible(){
+        try{
+            const desc = await action.getContentDescription(this.cwoStatus);
+            return desc.includes('NEW');
+        }
+        catch(e){
+            return false;
+        }
+    }
+
     async waitForProcessingBanner(timeout = 3000){
         try{
             await this.processingBannerTitle.waitForDisplayed({
@@ -210,13 +251,22 @@ class CWODetailPage{
     }
 
     async scrollToBottomOfInfoTab() {
+        // Phase-1 coarse scroll: two scrollToEnd passes advance the ScrollView
+        // close to the bottom so that the scrollIntoView in the element getter
+        // (phase 2) only needs a small adjustment rather than scrolling the full
+        // list from the top.  Running two passes handles cases where the content
+        // is lazy-rendered and the first pass exposes new rows.
+        const scrollCmd =
+            'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
+            '.scrollToEnd(20)';
+
         try {
-            await $('android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
-                    '.scrollToEnd(10)' //  max 10 swipes
-            );
-            await browser.pause(500);
+            await $(scrollCmd);           // first pass
+            await browser.pause(800);
+            await $(scrollCmd);           // second pass — exposes late-rendered rows
+            await browser.pause(1000);
         } catch (e) {
-            console.warn('Pre-scroll failed, continuing...', e.message);
+            console.warn('Info tab scroll-to-end failed, continuing...', e.message);
         }
     }
 }
