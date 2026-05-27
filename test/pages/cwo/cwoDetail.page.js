@@ -84,12 +84,16 @@ class CWODetailPage{
     get successBannerTitle(){ return $('android=new UiSelector().resourceId("flashBanner_success_view_title")');}
 
 
-    get cwoInfoSupervisorValue(){ return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
-        '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_supervisor_value"))'; 
+    // Plain selectors — used AFTER scrollToBottomOfInfoTab() has already
+    // scrolled the inner android.widget.ScrollView to the bottom.
+    // Keeping scroll and lookup separate avoids the two-UiScrollable conflict
+    // that caused the "only scrolls halfway" failure.
+    get cwoInfoSupervisorValue(){
+        return 'android=new UiSelector().resourceId("cwoAdditionalInformationTab_supervisor_value")';
     }
 
-    get cwoInfoTechnicianValue(){ return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
-        '.scrollIntoView(new UiSelector().resourceId("cwoAdditionalInformationTab_technician_value"))'; 
+    get cwoInfoTechnicianValue(){
+        return 'android=new UiSelector().resourceId("cwoAdditionalInformationTab_technician_value")';
     }
 
     get cwoAttachmentBox(){
@@ -241,13 +245,21 @@ class CWODetailPage{
     }
 
     async scrollToBottomOfInfoTab() {
+        // Two scroll passes are required: the first pass scrolls through the
+        // main content; the second ensures the supervisor / technician row
+        // (which may be dynamically rendered after the first scroll settles)
+        // is fully in view.
+        const scrollCmd =
+            'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
+            '.scrollToEnd(20)';
+
         try {
-            await $('android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
-                    '.scrollToEnd(10)' //  max 10 swipes
-            );
-            await browser.pause(500);
+            await $(scrollCmd);           // first pass
+            await browser.pause(800);
+            await $(scrollCmd);           // second pass — brings the supervisor row into view
+            await browser.pause(1000);
         } catch (e) {
-            console.warn('Pre-scroll failed, continuing...', e.message);
+            console.warn('Info tab scroll-to-end failed, continuing...', e.message);
         }
     }
 }

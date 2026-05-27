@@ -249,6 +249,87 @@ describe('CWO E2E Tests', () => {
             await dashboardFlow.navigateToDashboardFromFooter();
         });
 
+        it('TC_CWO_015: Verify supervisor name is displayed in the Information tab of an Assignment CWO', async () => {
+            allure.addFeature('CWO');
+            allure.addSeverity('Normal');
+            allure.addTag('regression');
+            allure.addTag('smoke');
+
+            // ── Step 1: Navigate to CWO list and apply "All" filter ──────────
+            await cwoFlow.navigateToCWOFromBottomNav();
+            await cwoFlow.getAllCWOs();
+
+            // ── Step 2: Open first CWO from the Assignment tab ───────────────
+            await cwoFlow.tapWorkOrderFromTheListByStatus('Assignment');
+
+            // ── Step 3: Navigate to Information tab, scroll to bottom,
+            //            and read the supervisor name ─────────────────────────
+            // getNameByRoleFromCWOInfoTab internally:
+            //   → taps navigationItemInactive_Information_tab
+            //   → scrolls to bottom of the ScrollView
+            //   → scrollIntoView cwoAdditionalInformationTab_supervisor_value
+            //   → returns content-desc[1] (the display name)
+            const supervisorName = await cwoFlow.getNameByRoleFromCWOInfoTab('Supervisor');
+
+            // ── Step 4: Assert and display ───────────────────────────────────
+            console.log(`\n✔ Supervisor found in Information tab: "${supervisorName}"\n`);
+            expect(supervisorName).toBeTruthy();
+            expect(supervisorName.trim().length).toBeGreaterThan(0);
+
+            // ── Cleanup: return to dashboard ──────────────────────────────────
+            // navigateToDashboardFromFooter() is very slow here because the CWO
+            // landing page is still reloading all work orders (All filter active)
+            // after tapBack().  The AppBar drawer button is in a separate widget
+            // tree and responds immediately regardless of list-loading state, so
+            // the right-drawer path is significantly faster.
+            await commonPage.tapBack();
+            await dashboardFlow.navigateToDashboardFromRightDrawer();
+        });
+
+        it('TC_CWO_016: Verify supervisor name is blank in Information tab after CWO rejection', async () => {
+            allure.addFeature('CWO');
+            allure.addSeverity('Normal');
+            allure.addTag('regression');
+            allure.addTag('smoke');
+
+            // ── Step 1: Navigate to CWO list and apply "All" filter ──────────
+            await cwoFlow.navigateToCWOFromBottomNav();
+            await cwoFlow.getAllCWOs();
+
+            // ── Step 2: Open first CWO from the Assignment tab ───────────────
+            await cwoFlow.tapWorkOrderFromTheListByStatus('Assignment');
+
+            // ── Step 3: Reject the CWO — app auto-navigates to NEW status ────
+            const rejectResult = await cwoFlow.rejectCWO();
+            console.log('CWO rejected. Status after rejection:', rejectResult.status);
+            expect(rejectResult.status).toContain('NEW');
+
+            // ── Step 4: Navigate to Information tab, scroll to bottom twice,
+            //            and verify supervisor name is blank ───────────────────
+            // getNameByRoleFromCWOInfoTab:
+            //   → taps navigationItemInactive_Information_tab
+            //   → calls scrollToBottomOfInfoTab() (two scrollToEnd passes)
+            //   → reads content-desc[1] of cwoAdditionalInformationTab_supervisor_value
+            const supervisorName = await cwoFlow.getNameByRoleFromCWOInfoTab('Supervisor');
+
+            console.log(`\n✔ Supervisor value in Information tab after rejection: "${supervisorName}"\n`);
+
+            // After rejection the supervisor assignment is cleared — the field
+            // should be empty, blank, or show the app's placeholder dash "-".
+            const isBlank = !supervisorName
+                || supervisorName.trim() === ''
+                || supervisorName.trim() === '-';
+            expect(isBlank).toBe(true);
+
+            // ── Cleanup: return to dashboard ──────────────────────────────────
+            // navigateBackFromRejectedCWO checks NEW status in the AppBar (still
+            // visible on the Info tab) and taps the AppBar Back button to return
+            // to the CWO list.  Use the right-drawer home for the same fast path
+            // as TC_CWO_015.
+            await cwoFlow.navigateBackFromRejectedCWO();
+            await dashboardFlow.navigateToDashboardFromRightDrawer();
+        });
+
         it('TC_CWO_014: Create a CWO, assign supervisor, navigate to Assignment tab and reject', async () => {
             allure.addFeature('CWO');
             allure.addTag('regression');

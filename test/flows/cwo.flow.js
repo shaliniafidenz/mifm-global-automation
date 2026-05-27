@@ -402,34 +402,40 @@ class CWOFlow{
 
     async getNameByRoleFromCWOInfoTab(role){
 
-        let username=null;
-        let elementName;
+        let username = null;
+        let elementSelector;
 
-        //Goto Info screen and validate supervisor name
+        // Navigate to the Information tab and allow it to fully render
         await cwoDetailsPage.tapInfoTab();
         await browser.pause(2000);
 
         switch(role){
             case 'Supervisor':
-                elementName = cwoDetailsPage.cwoInfoSupervisorValue;
+                elementSelector = cwoDetailsPage.cwoInfoSupervisorValue;
                 break;
             case 'Technician':
-                elementName = cwoDetailsPage.cwoInfoTechnicianValue;
+                elementSelector = cwoDetailsPage.cwoInfoTechnicianValue;
                 break;
             default:
                 throw new Error(`Unsupported role for fetching name from CWO Info tab: ${role}`);
         }
 
-       // console.log(`End of scrolling. Fetching name for role: ${role} using element: ${elementName}`);
-       // await browser.pause(5000); // Pause to allow any potential UI updates after scrolling
-       
-        await cwoDetailsPage.scrollToBottomOfInfoTab(); 
-        const element = await $(elementName);
-       
-        //username = (await action.getText(elementName)).split('\n')[1];
-        await browser.pause(3000);
-        username = (await action.getText(element)).split('\n')[1];
-        console.log(`Fetched name for role: ${role} is: ${username}`);
+        // Step 1 – scroll the inner android.widget.ScrollView all the way to
+        //          the bottom so the supervisor / technician row is on screen.
+        //          scrollToEnd(20) on the ScrollView is reliable and does NOT
+        //          conflict with the plain UiSelector used in step 2.
+        await cwoDetailsPage.scrollToBottomOfInfoTab();
+
+        // Step 2 – now that the element is physically visible, read its value
+        //          with getContentDescription() which calls waitForDisplayed()
+        //          before attempting the attribute read.
+        const element = await $(elementSelector);
+        const rawDesc = await action.getContentDescription(element);
+
+        // content-desc format: "<resource-id>\n<display-value>"
+        // e.g. "cwoAdditionalInformationTab_supervisor_value\nWei Kang Lee"
+        username = rawDesc.split('\n')[1];
+        console.log(`Fetched name for role: ${role} is: "${username}"`);
         return username;
 
     }
