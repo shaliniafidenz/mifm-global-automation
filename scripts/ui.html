@@ -921,40 +921,78 @@ function renderSuiteGroupFiltered(name, allowedIds, dis) {
     return html;
 }
 
+function renderSuiteNode(name, dis) {
+    var suite  = suites[name];
+    if (!suite) return '';
+    var isOpen = !!expanded[name];
+    var tests  = getAllTests(name);
+
+    var html = '<div class="suite-group">';
+    html += '<div class="suite-row">';
+    html += '<div class="suite-expand" onclick=\'toggleExpand(' + JSON.stringify(name) + ')\'>';
+    html += '<span class="chevron' + (isOpen ? ' open' : '') + '">' + icoChevron() + '</span>';
+    html += icoFile();
+    html += '<span class="suite-name">' + name + '</span>';
+    html += '<span class="badge">' + tests.length + '</span>';
+    html += '<span class="suite-status" id="ss-' + name + '">' + suiteStatusHtml(name) + '</span>';
+    html += '</div>';
+    html += '<button class="suite-run-btn" title="Run all ' + name + ' tests"'
+        + dis + ' onclick=\'runSuite(' + JSON.stringify(name) + ')\'>'
+        + icoPlay(11) + '</button>';
+    html += '</div>';
+
+    html += '<div class="test-children' + (isOpen ? ' open' : '') + '">';
+    suite.describes.forEach(function(desc, di) {
+        html += renderDescNode(desc, name, [di], dis);
+    });
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+}
+
 function renderTree() {
     var dis  = running ? ' disabled' : '';
     var html = '';
 
-    Object.keys(groups).forEach(function(folderName) {
-        var folderSuites = groups[folderName]; // { suiteName: [tcIds] }
-        var isOpen = folderExpanded[folderName] !== false;
-        var total  = Object.keys(folderSuites).reduce(function(n, s) {
-            return n + folderSuites[s].length;
-        }, 0);
+    if (groups && Object.keys(groups).length > 0) {
+        // Folder/group mode — render test cases grouped by tag
+        Object.keys(groups).forEach(function(folderName) {
+            var folderSuites = groups[folderName]; // { suiteName: [tcIds] }
+            var isOpen = folderExpanded[folderName] !== false;
+            var total  = Object.keys(folderSuites).reduce(function(n, s) {
+                return n + folderSuites[s].length;
+            }, 0);
 
-        html += '<div class="folder-group">';
-        html += '<div class="folder-row">';
-        html += '<div class="folder-expand" onclick=\'toggleFolder(' + JSON.stringify(folderName) + ')\'>';
-        html += '<span class="chevron' + (isOpen ? ' open' : '') + '">' + icoChevron() + '</span>';
-        html += icoFolder();
-        html += '<span class="folder-name">' + escHtml(folderName) + '</span>';
-        html += '<span class="badge">' + total + '</span>';
-        html += '<span class="folder-status" id="fs-' + folderName + '">'
-            + folderStatusHtml(folderName) + '</span>';
-        html += '</div>';
-        html += '<button class="suite-run-btn" title="Run all ' + escHtml(folderName) + '"'
-            + dis + ' onclick=\'runGroup(' + JSON.stringify(folderName) + ')\'>'
-            + icoPlay(11) + '</button>';
-        html += '</div>';
+            html += '<div class="folder-group">';
+            html += '<div class="folder-row">';
+            html += '<div class="folder-expand" onclick=\'toggleFolder(' + JSON.stringify(folderName) + ')\'>';
+            html += '<span class="chevron' + (isOpen ? ' open' : '') + '">' + icoChevron() + '</span>';
+            html += icoFolder();
+            html += '<span class="folder-name">' + escHtml(folderName) + '</span>';
+            html += '<span class="badge">' + total + '</span>';
+            html += '<span class="folder-status" id="fs-' + folderName + '">'
+                + folderStatusHtml(folderName) + '</span>';
+            html += '</div>';
+            html += '<button class="suite-run-btn" title="Run all ' + escHtml(folderName) + '"'
+                + dis + ' onclick=\'runGroup(' + JSON.stringify(folderName) + ')\'>'
+                + icoPlay(11) + '</button>';
+            html += '</div>';
 
-        html += '<div class="folder-children' + (isOpen ? ' open' : '') + '">';
-        Object.keys(folderSuites).forEach(function(name) {
-            html += renderSuiteGroupFiltered(name, folderSuites[name], dis);
+            html += '<div class="folder-children' + (isOpen ? ' open' : '') + '">';
+            Object.keys(folderSuites).forEach(function(name) {
+                html += renderSuiteGroupFiltered(name, folderSuites[name], dis);
+            });
+            html += '</div>';
+
+            html += '</div>';
         });
-        html += '</div>';
-
-        html += '</div>';
-    });
+    } else {
+        // Flat mode — render all suites directly (no grouping)
+        Object.keys(suites).forEach(function(name) {
+            html += renderSuiteNode(name, dis);
+        });
+    }
 
     document.getElementById('tree').innerHTML = html;
 }
