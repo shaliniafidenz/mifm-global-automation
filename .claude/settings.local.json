@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const d = require\\('./test/fixtures/login.data'\\); console.log\\(JSON.stringify\\(d\\)\\);\")",
+      "Bash(node -e \"const d = require\\('./test/fixtures/cwo.data'\\); console.log\\(JSON.stringify\\(d, null, 2\\)\\);\")"
+    ]
+  }
+}

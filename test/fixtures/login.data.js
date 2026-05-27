@@ -1,10 +1,12 @@
+const env = require('../config/env');
+
 module.exports = {
     validUser: {
-        username: 'chamodi.r@fidenz.com',
-        password: 'P@ssw0rd'
+        username: env.login.validUsername,
+        password: env.login.validPassword,
     },
-    invalidUser:{
-        username: 'wronguser@gmail.com',
-        password: 'WrongPassword'
-    }
+    invalidUser: {
+        username: env.login.invalidUsername,
+        password: env.login.invalidPassword,
+    },
 };

@@ -70,6 +70,10 @@ class CWOCreatePage{
         return $('android=new UiSelector().resourceId("createCwo_tap_listTile_27")');
     }
 
+    get capturePhotoOption(){
+        return $('android=new UiSelector().resourceId("createCwo_tap_listTile_28")');
+    }
+
     get uploadedImageThumbBox(){
          return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
         '.scrollIntoView(new UiSelector().resourceId("attachmentItem_tap_inkwell_09"))');
@@ -164,6 +168,17 @@ class CWOCreatePage{
 
     async tapUploadFromGalleryOption(){
         await action.click(this.uploadFromGalleryOption);
+    }
+
+    async tapCapturePhotoOption(){
+        await action.click(this.capturePhotoOption);
+    }
+
+    async waitForManualCapture(){
+        // Camera is open — script pauses here while you manually capture the photo
+        // and tap the confirm (right) button in the camera app.
+        // Automation resumes once the app's preview popup appears.
+        await this.attachmentPreviewOkButton.waitForDisplayed({ timeout: 60000 });
     }
 
     async tapSubmitButton(){

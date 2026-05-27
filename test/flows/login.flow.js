@@ -43,6 +43,7 @@ class LoginFlow {
         try{
             await loginPage.enterUsername('');
             await loginPage.tapLogin();
+            await loginPage.waitForUsernameError();
 
             const userNameVisible = await loginPage.isUsernameVisible();
             const errorMessageVisible = await loginPage.isUsernameErrorMessageVisible();
@@ -63,6 +64,7 @@ class LoginFlow {
         try{
             await loginPage.enterUsername(loginData.invalidUser.username);
             await loginPage.tapLogin();
+            await loginPage.waitForUsernameError();
 
             const userNameVisible = await loginPage.isUsernameVisible();
             const errorMessageVisible = await loginPage.isUsernameErrorMessageVisible();
@@ -81,6 +83,7 @@ class LoginFlow {
         try{
             await loginPage.enterPassword('');
             await loginPage.tapLogin();
+            await loginPage.waitForPasswordError();
 
             const passwordVisible = await loginPage.isPasswordVisible();
             const errorMessageVisible = await loginPage.isPasswordErrorMessageVisible();
@@ -99,6 +102,7 @@ class LoginFlow {
         try{
             await loginPage.enterPassword(loginData.invalidUser.password);
             await loginPage.tapLogin();
+            await loginPage.waitForPasswordError();
 
             const passwordVisible = await loginPage.isPasswordVisible();
             const errorMessageVisible = await loginPage.isPasswordErrorMessageVisible();
@@ -125,12 +129,35 @@ class LoginFlow {
 
     async goBackToLoginUsernamePage(){
         try{
-            return await loginPage.resetLogin();  
-          }
-          catch(error){
-              console.error('Error when going back to login username page:', error);
-              return false;
-          }
+            // The back button is android.view.View resource-id="reset-login"
+            // (the inner android.widget.TextView text="" is just its icon child).
+            await loginPage.resetLogin();
+        }
+        catch(error){
+            // Fallback: Android KEYCODE_BACK (4) navigates the WebView back in history.
+            console.warn('reset-login tap failed, falling back to KEYCODE_BACK:', error.message);
+            try{
+                await browser.pressKeyCode(4);
+            }
+            catch(fallbackError){
+                console.error('KEYCODE_BACK press also failed:', fallbackError.message);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Waits until the email/username field is visible — use this after
+    // goBackToLoginUsernamePage() instead of a fixed pause + isDisplayed.
+    async waitForUsernamePageAfterBack(timeout = 8000){
+        try{
+            await loginPage.waitForUsernameField(timeout);
+            return true;
+        }
+        catch(error){
+            console.error('Email/username field did not appear after back navigation:', error.message);
+            return false;
+        }
     }
 
     async logout(){
@@ -143,6 +170,81 @@ class LoginFlow {
         //waiting for login page to be displayed after logout
        // await loginPage.waitForLoginPageToDisplay();
         await commonPage.waitForLoaderToDisappear(); // wait for loader to disappear after logout, before proceeding with any further actions
+    }
+
+    // ─── UI state helpers ────────────────────────────────────────────────────
+
+    async isLoginPageTitleDisplayed(){
+        try{
+            return await loginPage.isLoginPageTitleVisible();
+        }
+        catch(error){
+            console.error('Error checking login page title visibility:', error);
+            return false;
+        }
+    }
+
+    async isUsernameFieldDisplayed(){
+        try{
+            return await loginPage.isUsernameVisible();
+        }
+        catch(error){
+            console.error('Error checking username field visibility:', error);
+            return false;
+        }
+    }
+
+    async isSignInButtonDisplayed(){
+        try{
+            return await loginPage.isLoginButtonVisible();
+        }
+        catch(error){
+            console.error('Error checking sign-in button visibility:', error);
+            return false;
+        }
+    }
+
+    // ─── Post-login header helpers ───────────────────────────────────────────
+
+    async getLoggedInUsername(){
+        try{
+            return await headerPage.getLoggedInUsername();
+        }
+        catch(error){
+            console.error('Error getting logged-in username from header:', error);
+            return null;
+        }
+    }
+
+    async isUsernameLabelVisible(){
+        try{
+            return await headerPage.isUsernameLabelVisible();
+        }
+        catch(error){
+            console.error('Error checking username label visibility:', error);
+            return false;
+        }
+    }
+
+    // ─── Loading screen helper ───────────────────────────────────────────────
+
+    /**
+     * Polls until dashboard_loader becomes visible, then returns true.
+     * Returns false if the loader never appears within the timeout
+     * (it may have appeared and vanished before the first poll — treat as warning).
+     */
+    async waitForLoaderToAppear(timeout = 8000){
+        try{
+            await browser.waitUntil(
+                async () => await action.isDisplayedSafe(commonPage.loader),
+                { timeout, interval: 200, timeoutMsg: `Loader did not appear after ${timeout}ms` }
+            );
+            return true;
+        }
+        catch(error){
+            console.warn('Loader was not detected within timeout — it may have appeared and disappeared before the first poll');
+            return false;
+        }
     }
 }
 

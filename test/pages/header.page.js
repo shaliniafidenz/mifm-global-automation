@@ -12,6 +12,11 @@ class HeaderPage{
         return $('//android.widget.Button[contains(@content-desc, "OK")]');
     }
 
+    // Home screen header — shows logged-in user name and role
+    // content-desc: "header_username_label\napplicationBar_view_text_02\n<Name>\napplicationBar_view_text_01\n<Role>"
+    get usernameLabel(){ return $('android=new UiSelector().resourceId("header_username_label")');}
+
+
     async openMenuDrawer(){
         await action.click(this.menuDrawerBtn);
     }
@@ -38,6 +43,16 @@ class HeaderPage{
     async tapOkFromLogoutAlert(){
         //tap the OK button from the logout confirmation alert
         await action.click(this.logoutPromptOkButton);
+    }
+
+    // Returns the display name portion of the header label (e.g. "Pasindu K")
+    async getLoggedInUsername(){
+        const desc = await action.getContentDescription(this.usernameLabel);
+        return desc.split('\n')[2]; // [0]=resourceId [1]=text-02 key [2]=display name [3]=text-01 key [4]=role
+    }
+
+    async isUsernameLabelVisible(){
+        return await action.isDisplayed(this.usernameLabel);
     }
 }
 

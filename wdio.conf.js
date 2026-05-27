@@ -1,3 +1,6 @@
+require('dotenv').config();
+const env = require('./test/config/env');
+
 // Fire-and-forget POST to the UI runner's /api/step endpoint.
 // Silently no-ops if the UI runner is not running.
 function postStep(data) {
@@ -73,14 +76,13 @@ exports.config = {
     // https://saucelabs.com/platform/platform-configurator
     //
     capabilities: [{
-        // capabilities for local Appium web tests on an Android Emulator
         platformName: 'Android',
-        'appium:deviceName': 'R58M81ZYXKH',
-        'appium:platformVersion': '11',
-        'appium:automationName': 'UiAutomator2',
-        'appium:appPackage': 'com.certisgroup.mifmv2',
-        'appium:appActivity': 'com.certisgroup.mifmv2.MainActivity',
-        'appium:appWaitActivity': 'com.certisgroup.mifmv2.MainActivity',
+        'appium:deviceName':      env.device.name,
+        'appium:platformVersion': env.device.platformVersion,
+        'appium:automationName':  'UiAutomator2',
+        'appium:appPackage':      env.device.appPackage,
+        'appium:appActivity':     env.device.appActivity,
+        'appium:appWaitActivity': env.device.appActivity,
         'appium:noReset': true,
         'appium:autoGrantPermissions': true,
         'appium:newCommandTimeout': 300,
@@ -142,8 +144,9 @@ exports.config = {
         ['appium', {
             command: 'appium',
             args: {
-            address: '127.0.0.1',
-            port: 4723
+                address: '127.0.0.1',
+                port: 4723,
+                relaxedSecurity: true,
             },
             logPath: './logs',
             waitStartTime: 5000, // 👈 add this (5 seconds)

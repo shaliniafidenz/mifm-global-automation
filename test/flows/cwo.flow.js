@@ -6,6 +6,7 @@ const footerPage = require('../pages/footer.page');
 const commonPage = require('../pages/common.page');
 const action = require('../utils/action.utils');
 const waitUtils = require('../utils/wait.utils');
+const cwoData = require('../fixtures/cwo.data');
 
 class CWOFlow{
 
@@ -34,13 +35,13 @@ class CWOFlow{
         await cwoLandingPage.tapCreateCWO();
 
         await cwoCreatePage.tapBuildingDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, '10 MBC');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, cwoData.create.building);
 
         await cwoCreatePage.tapLocationDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, '10 MBC L5');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, cwoData.create.location);
 
         await cwoCreatePage.tapProblemTypeDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, 'Aircon is not cold');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, cwoData.create.problemType);
 
         await cwoCreatePage.tapSubmitButton();
         await commonPage.waitForLoaderToDisappear();
@@ -49,7 +50,7 @@ class CWOFlow{
         const status = await cwoDetailsPage.getCWOStatusFromHeader();
 
         return { cwoNumber, status };
-        
+
     }
 
     async createCWOWithImageUpload(){
@@ -57,13 +58,13 @@ class CWOFlow{
         await cwoLandingPage.tapCreateCWO();
 
         await cwoCreatePage.tapBuildingDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, '10 MBC');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, cwoData.create.building);
 
         await cwoCreatePage.tapLocationDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, '10 MBC L5');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, cwoData.create.location);
 
         await cwoCreatePage.tapProblemTypeDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, 'Aircon is not cold');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, cwoData.create.problemType);
 
         await cwoCreatePage.tapAddPhotoTile();
         await cwoCreatePage.tapUploadFromGalleryOption();
@@ -86,6 +87,40 @@ class CWOFlow{
 
         return { cwoNumber, status, imageName };
         
+    }
+
+    async createCWOWithCapturedImage(){
+        await cwoLandingPage.tapCreateCWO();
+
+        await cwoCreatePage.tapBuildingDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, cwoData.create.building);
+
+        await cwoCreatePage.tapLocationDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, cwoData.create.location);
+
+        await cwoCreatePage.tapProblemTypeDropdown();
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, cwoData.create.problemType);
+
+        await cwoCreatePage.tapAddPhotoTile();
+        await cwoCreatePage.tapCapturePhotoOption();
+        await cwoCreatePage.waitForManualCapture(); // pauses until you capture + confirm in camera
+
+        await cwoCreatePage.confirmPreview();
+
+        await browser.pause(2000);
+
+        const imageName = (await action.getContentDescription(cwoCreatePage.uploadedImageThumbBox)).split('\n')[2];
+
+        await cwoCreatePage.tapSubmitButton();
+        await commonPage.waitForLoaderToDisappear();
+
+        await waitUtils.waitToDisappear(cwoDetailsPage.processingBannerTitle, 10000);
+        await waitUtils.waitToDisappear(cwoDetailsPage.successBannerTitle, 10000);
+
+        const cwoNumber = await cwoDetailsPage.getCWONumberFromHeader();
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+
+        return { cwoNumber, status, imageName };
     }
 
     async getImageNameFromAttachmentsTab(){
@@ -143,19 +178,19 @@ class CWOFlow{
         await commonPage.selectRandomOption(cwoCreatePage.cwoRequesterDropdownOptions);
 
         await cwoCreatePage.tapBuildingDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, 'CW');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoBuildingDropdownOptions, cwoData.reset.building);
 
         await cwoCreatePage.tapLocationDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, 'CW');
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoLocationDropdownOptions, cwoData.reset.location);
 
         await cwoCreatePage.tapProblemTypeDropdown();
-        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, 'Audio Visual');
-        
+        await commonPage.selectOptionByTextAndIndex(cwoCreatePage.cwoProblemTypeDropdownOptions, cwoData.reset.problemType);
+
         await cwoCreatePage.tapAssetDropdown();
         await commonPage.selectRandomOption(cwoCreatePage.cwoAssetDropdownOptions);
 
         await cwoCreatePage.tapDescriptionField();
-        await cwoCreatePage.enterDescription('This is a description for resetting CWO creation');
+        await cwoCreatePage.enterDescription(cwoData.reset.description);
         await driver.hideKeyboard();
 
         await cwoCreatePage.tapResetCWOButton();
@@ -384,36 +419,84 @@ class CWOFlow{
 
     async getNameByRoleFromCWOInfoTab(role){
 
-        let username=null;
-        let elementName;
+        let username = null;
+        let elementSelector;
 
-        //Goto Info screen and validate supervisor name
+        // Navigate to the Information tab and allow it to fully render
         await cwoDetailsPage.tapInfoTab();
         await browser.pause(2000);
 
         switch(role){
             case 'Supervisor':
-                elementName = cwoDetailsPage.cwoInfoSupervisorValue;
+                elementSelector = cwoDetailsPage.cwoInfoSupervisorValue;
                 break;
             case 'Technician':
-                elementName = cwoDetailsPage.cwoInfoTechnicianValue;
+                elementSelector = cwoDetailsPage.cwoInfoTechnicianValue;
                 break;
             default:
                 throw new Error(`Unsupported role for fetching name from CWO Info tab: ${role}`);
         }
 
-       // console.log(`End of scrolling. Fetching name for role: ${role} using element: ${elementName}`);
-       // await browser.pause(5000); // Pause to allow any potential UI updates after scrolling
-       
-        await cwoDetailsPage.scrollToBottomOfInfoTab(); 
-        const element = await $(elementName);
-       
-        //username = (await action.getText(elementName)).split('\n')[1];
-        await browser.pause(3000);
-        username = (await action.getText(element)).split('\n')[1];
-        console.log(`Fetched name for role: ${role} is: ${username}`);
+        // Step 1 – scroll the inner android.widget.ScrollView all the way to
+        //          the bottom so the supervisor / technician row is on screen.
+        //          scrollToEnd(20) on the ScrollView is reliable and does NOT
+        //          conflict with the plain UiSelector used in step 2.
+        await cwoDetailsPage.scrollToBottomOfInfoTab();
+
+        // Step 2 – now that the element is physically visible, read its value
+        //          with getContentDescription() which calls waitForDisplayed()
+        //          before attempting the attribute read.
+        const element = await $(elementSelector);
+        const rawDesc = await action.getContentDescription(element);
+
+        // content-desc format: "<resource-id>\n<display-value>"
+        // e.g. "cwoAdditionalInformationTab_supervisor_value\nWei Kang Lee"
+        username = rawDesc.split('\n')[1];
+        console.log(`Fetched name for role: ${role} is: "${username}"`);
         return username;
 
+    }
+
+    async rejectCWO(){
+        // Allow the CWO detail screen to fully render before scrolling
+        await browser.pause(3000);
+
+        // UiScrollable in the getter scrolls down to the button automatically
+        await cwoDetailsPage.tapRejectButton();
+
+        // After rejection the app immediately auto-navigates to the CWO detail
+        // page showing the reverted NEW status.  The processing/success banners
+        // appear and disappear faster than a poll can reliably catch them, so we
+        // don't assert them here.  Instead we wait for the navigation to settle
+        // and verify the resulting status.
+        await browser.pause(6000);
+
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+        return { status };
+    }
+
+    /**
+     * After a CWO is rejected the app auto-navigates to the CWO detail page
+     * showing the reverted NEW status.  This helper:
+     *  1. Checks whether the NEW-status chip is visible in the app bar.
+     *  2. If yes → taps the app-bar Back button (android.widget.Button "Back")
+     *             to return to the CWO landing list.
+     *  3. If not visible → falls back to the generic back action.
+     *  Call this immediately after rejectCWO() before navigating to the dashboard.
+     */
+    async navigateBackFromRejectedCWO(){
+        await browser.pause(2000); // let the post-rejection transition settle
+
+        const isNewStatus = await cwoDetailsPage.isNewStatusVisible();
+        if(isNewStatus){
+            console.log('Rejected CWO reverted to NEW status — tapping app-bar Back to return to CWO list.');
+            await cwoDetailsPage.tapDetailBackButton();
+        } else {
+            console.log('NEW status not detected — using generic back navigation.');
+            await commonPage.tapBack();
+        }
+
+        await browser.pause(2000); // allow CWO landing page to fully render
     }
 
     async assignTechnicianToAssignmentCWO(){
