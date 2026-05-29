@@ -257,6 +257,44 @@ describe('PPM E2E Tests', () => {
             await dashboardFlow.navigateToDashboardFromFooter();
         });
 
+        it('TC_PPM_016: Reject a PPM from ACKNOWLEDGMENT stage and verify technician is cleared', async () => {
+            allure.addFeature('PPM');
+            allure.addSeverity('blocker');
+            allure.addTag('regression');
+            allure.addTag('smoke');
+
+            // ── Step 1 & 2: Navigate to PPM, open first ACKNOWLEDGEMENT work order ──
+            await ppmFlow.navigateToPPMFromBottomNav();
+            await ppmFlow.getAllPPMs();
+            await ppmFlow.tapWorkOrderFromTheListByStatus('Acknowledgement');
+
+            // ── Step 3: Capture technician name from Info tab before rejection ───────
+            const technicianNameBefore = await ppmFlow.getNameByRoleFromPPMInfoTab('Technician');
+            console.log(`\nTechnician before rejection: "${technicianNameBefore}"\n`);
+            expect(technicianNameBefore).toBeTruthy();
+            expect(technicianNameBefore.trim().length).toBeGreaterThan(0);
+
+            // ── Steps 4 & 5: Details tab → Reject button → dialog (reason + OK) ──────
+            // ── Step 6: Verify status reverted to ASSIGNMENT ──────────────────────────
+            const rejectResult = await ppmFlow.rejectPPMFromAcknowledgement('Testing rejection from acknowledgement stage');
+            console.log('PPM rejected. Status after rejection:', rejectResult.status);
+            expect(rejectResult.status).toContain('ASSIGNMENT');
+
+            // ── Step 7: Tap Info tab, verify technician value is now '-' ─────────────
+            const technicianNameAfter = await ppmFlow.getNameByRoleFromPPMInfoTab('Technician');
+            console.log(`\nTechnician after rejection: "${technicianNameAfter}"\n`);
+
+            const isCleared = !technicianNameAfter
+                || technicianNameAfter.trim() === ''
+                || technicianNameAfter.trim() === '-';
+            expect(isCleared).toBe(true);
+
+            // ── Steps 8 & 9: Back to PPM list, then Dashboard ────────────────────────
+            await commonPage.tapBack();
+            await browser.pause(2000);
+            await dashboardFlow.navigateToDashboardFromFooter();
+        });
+
     });
 
 });

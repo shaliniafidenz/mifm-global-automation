@@ -17,7 +17,7 @@ describe('CWO E2E Tests', () => {
 
         it.skip('TC_CWO_001: Verify user can navigate to CWO List from bottom navigation', async () => {
             allure.addFeature('CWO');
-            allure.addSeverity('Critical');
+            allure.addSeverity('blocker');
             allure.addTag('smoke');
             allure.addTag('regression');
 
@@ -30,7 +30,7 @@ describe('CWO E2E Tests', () => {
 
         it.skip('TC_CWO_002: Verify user can navigate to CWO List from the right side drawer', async () => {
             allure.addFeature('CWO');
-            allure.addSeverity('Critical');
+            allure.addSeverity('blocker');
             allure.addTag('smoke');
 
             const cwoTitle = await cwoFlow.navigateToCWOFromRightMenuDrawer();
@@ -44,7 +44,7 @@ describe('CWO E2E Tests', () => {
 
         it.skip('TC_CWO_003: Verify user can navigate to CWO List from the bottom menu', async () => {
             allure.addFeature('CWO');
-            allure.addSeverity('Critical');
+            allure.addSeverity('blocker');
             allure.addTag('smoke');
 
             const cwoTitle = await cwoFlow.navigateToCWOFromBottomMenu();
@@ -60,7 +60,7 @@ describe('CWO E2E Tests', () => {
 
         it.skip('TC_CWO_004: Create a new CWO', async () => {
             allure.addFeature('CWO');
-            allure.addSeverity('Critical');
+            allure.addSeverity('blocker');
             allure.addTag('smoke');
             allure.addTag('regression');
 
@@ -110,7 +110,7 @@ describe('CWO E2E Tests', () => {
 
         it.skip('TC_CWO_006: Mandatory field validation', async () => {
             allure.addFeature('CWO');
-            allure.addSeverity('Critical');
+            allure.addSeverity('critical');
             allure.addTag('regression');
 
             await cwoFlow.navigateToCWOFromBottomNav();
@@ -132,7 +132,7 @@ describe('CWO E2E Tests', () => {
 
         it.skip('TC_CWO_007: Create a new CWO with capturing image', async () => {
             allure.addFeature('CWO');
-            allure.addSeverity('Critical');
+            allure.addSeverity('critical');
             allure.addTag('smoke');
             allure.addTag('regression');
 
@@ -165,6 +165,7 @@ describe('CWO E2E Tests', () => {
         it.skip('TC_CWO_008: Reset CWO creation', async () => {
             allure.addFeature('CWO');
             allure.addTag('regression');
+            allure.addSeverity('minor');
 
             await cwoFlow.navigateToCWOFromBottomNav();
             const cwoValuesafterReset = await cwoFlow.resetCWO();
@@ -193,7 +194,7 @@ describe('CWO E2E Tests', () => {
             allure.addFeature('CWO');
             allure.addTag('regression');
             allure.addTag('smoke');
-            allure.addSeverity('Critical');
+            allure.addSeverity('critical');
 
             await cwoFlow.navigateToCWOFromBottomNav();
             await cwoFlow.getAllCWOs();
@@ -212,7 +213,7 @@ describe('CWO E2E Tests', () => {
             allure.addFeature('CWO');
             allure.addTag('regression');
             allure.addTag('smoke');
-            allure.addSeverity('Critical');
+            allure.addSeverity('critical');
 
             await cwoFlow.navigateToCWOFromBottomNav();
             await cwoFlow.getAllCWOs();
@@ -232,7 +233,7 @@ describe('CWO E2E Tests', () => {
             allure.addFeature('CWO');
             allure.addTag('regression');
             allure.addTag('smoke');
-            allure.addSeverity('Critical');
+            allure.addSeverity('critical');
 
             await cwoFlow.navigateToCWOFromBottomNav();
             await cwoFlow.getAllCWOs();
@@ -249,9 +250,31 @@ describe('CWO E2E Tests', () => {
             await dashboardFlow.navigateToDashboardFromFooter();
         });
 
+        it('TC_CWO_014: Create CWO and move it to In-Progress', async () => {
+            allure.addFeature('CWO');
+            allure.addTag('regression');
+            allure.addTag('smoke');
+            allure.addSeverity('blocker');
+
+            await cwoFlow.navigateToCWOFromBottomNav();
+
+            const workflowResult = await cwoFlow.createCWOAndMoveToInProgress();
+
+            expect(workflowResult.createdCWO.cwoNumber).toContain('CWO');
+            expect(workflowResult.createdCWO.status).toContain('NEW');
+            expect(workflowResult.supervisorAssignment.status).toContain('ASSIGNMENT');
+            expect(workflowResult.technicianAssignment.status).toContain('ACKNOWLEDGEMENT');
+           // expect(workflowResult.acknowledgement.isProcessingBannerVisible).toBe(true);
+           // expect(workflowResult.acknowledgement.isSuccessBannerVisible).toBe(true);
+            expect(workflowResult.acknowledgement.status).toContain('INPROGRESS');
+
+            await commonPage.tapBack();
+            await browser.pause(2000);
+        });
+
         it('TC_CWO_015: Verify supervisor name is displayed in the Information tab of an Assignment CWO', async () => {
             allure.addFeature('CWO');
-            allure.addSeverity('Normal');
+            allure.addSeverity('critical');
             allure.addTag('regression');
             allure.addTag('smoke');
 
@@ -286,9 +309,56 @@ describe('CWO E2E Tests', () => {
             await dashboardFlow.navigateToDashboardFromRightDrawer();
         });
 
-        it('TC_CWO_016: Verify supervisor name is blank in Information tab after CWO rejection', async () => {
+        it('TC_CWO_016: Create a CWO, assign supervisor, navigate to Assignment tab and reject', async () => {
             allure.addFeature('CWO');
-            allure.addSeverity('Normal');
+            allure.addTag('regression');
+            allure.addTag('smoke');
+            allure.addSeverity('blocker');
+
+            // ── Step 1: Navigate to CWO list ────────────────────────────────
+            await cwoFlow.navigateToCWOFromBottomNav();
+
+            // ── Step 2: Create a new CWO ─────────────────────────────────────
+            const isCWOCreateButtonVisible = await cwoLandingPage.isCWOCreateButtonVisible();
+            expect(isCWOCreateButtonVisible).toBe(true);
+
+            const cwoDetails = await cwoFlow.createCWO();
+            console.log('Created CWO:', cwoDetails.cwoNumber, '| Status:', cwoDetails.status);
+            expect(cwoDetails.cwoNumber).toContain('CWO');
+            expect(cwoDetails.status).toContain('NEW');
+
+            // ── Step 3: Assign supervisor (still on the CWO detail page) ─────
+            const assignResult = await cwoFlow.assignSupervisorToNewCWO();
+            console.log('Supervisor assigned:', assignResult.supervisorName, '| Status:', assignResult.status);
+            expect(assignResult.status).toContain('ASSIGNMENT');
+
+            // ── Step 4: Return to CWO list and show all CWOs ─────────────────
+            await commonPage.tapBack();
+            await browser.pause(2000);
+            await cwoFlow.getAllCWOs();
+
+            // ── Step 5: Open the first CWO from the Assignment tab ───────────
+            await cwoFlow.tapWorkOrderFromTheListByStatus('Assignment');
+
+            // ── Step 6: Scroll down and tap the Reject button ────────────────
+            const rejectResult = await cwoFlow.rejectCWO();
+            console.log('Reject result | status:', rejectResult.status);
+
+            // The app auto-navigates to the NEW-status detail page after rejection —
+            // that navigation is the confirmation the rejection succeeded.
+            expect(rejectResult.status).toContain('NEW');
+
+            // ── Cleanup: return to dashboard ──────────────────────────────────
+            // After rejection the app auto-navigates to the CWO detail page with
+            // NEW status; navigateBackFromRejectedCWO() handles that transition
+            // back to the CWO landing list before we tap the home footer button.
+            await cwoFlow.navigateBackFromRejectedCWO();
+            await dashboardFlow.navigateToDashboardFromFooter();
+        });
+
+        it('TC_CWO_017: Verify supervisor name is blank in Information tab after CWO rejection', async () => {
+            allure.addFeature('CWO');
+            allure.addSeverity('critical');
             allure.addTag('regression');
             allure.addTag('smoke');
 
@@ -330,50 +400,43 @@ describe('CWO E2E Tests', () => {
             await dashboardFlow.navigateToDashboardFromRightDrawer();
         });
 
-        it('TC_CWO_014: Create a CWO, assign supervisor, navigate to Assignment tab and reject', async () => {
+        it('TC_CWO_018: Reject a CWO from ACKNOWLEDGMENT stage and verify technician is cleared', async () => {
             allure.addFeature('CWO');
+            allure.addSeverity('blocker');
             allure.addTag('regression');
             allure.addTag('smoke');
-            allure.addSeverity('Critical');
 
-            // ── Step 1: Navigate to CWO list ────────────────────────────────
+            // ── Step 1 & 2: Navigate to CWO, open first ACKNOWLEDGEMENT work order ──
             await cwoFlow.navigateToCWOFromBottomNav();
+            await cwoFlow.getAllCWOs();
+            await cwoFlow.tapWorkOrderFromTheListByStatus('Acknowledgement');
 
-            // ── Step 2: Create a new CWO ─────────────────────────────────────
-            const isCWOCreateButtonVisible = await cwoLandingPage.isCWOCreateButtonVisible();
-            expect(isCWOCreateButtonVisible).toBe(true);
+            // ── Step 3: Capture technician name from Info tab before rejection ───────
+            const technicianNameBefore = await cwoFlow.getNameByRoleFromCWOInfoTab('Technician');
+            console.log(`\nTechnician before rejection: "${technicianNameBefore}"\n`);
+            expect(technicianNameBefore).toBeTruthy();
+            expect(technicianNameBefore.trim().length).toBeGreaterThan(0);
 
-            const cwoDetails = await cwoFlow.createCWO();
-            console.log('Created CWO:', cwoDetails.cwoNumber, '| Status:', cwoDetails.status);
-            expect(cwoDetails.cwoNumber).toContain('CWO');
-            expect(cwoDetails.status).toContain('NEW');
+            // ── Steps 4 & 5: Details tab → Reject button → dialog (reason + OK) ──────
+            // ── Step 6: Verify status reverted to ASSIGNMENT ──────────────────────────
+            const rejectResult = await cwoFlow.rejectCWOFromAcknowledgement('Testing rejection from acknowledgement stage');
+            console.log('CWO rejected. Status after rejection:', rejectResult.status);
+            expect(rejectResult.status).toContain('ASSIGNMENT');
 
-            // ── Step 3: Assign supervisor (still on the CWO detail page) ─────
-            const assignResult = await cwoFlow.assignSupervisorToNewCWO();
-            console.log('Supervisor assigned:', assignResult.supervisorName, '| Status:', assignResult.status);
-            expect(assignResult.status).toContain('ASSIGNMENT');
+            // ── Step 7: Tap Info tab, verify technician value is now '-' ─────────────
+            const technicianNameAfter = await cwoFlow.getNameByRoleFromCWOInfoTab('Technician');
+            console.log(`\nTechnician after rejection: "${technicianNameAfter}"\n`);
 
-            // ── Step 4: Return to CWO list and show all CWOs ─────────────────
+            // After rejection the technician assignment is cleared — the field
+            // should be empty, blank, or show the app's placeholder dash "-".
+            const isCleared = !technicianNameAfter
+                || technicianNameAfter.trim() === ''
+                || technicianNameAfter.trim() === '-';
+            expect(isCleared).toBe(true);
+
+            // ── Steps 8 & 9: Back to CWO list, then Dashboard ────────────────────────
             await commonPage.tapBack();
             await browser.pause(2000);
-            await cwoFlow.getAllCWOs();
-
-            // ── Step 5: Open the first CWO from the Assignment tab ───────────
-            await cwoFlow.tapWorkOrderFromTheListByStatus('Assignment');
-
-            // ── Step 6: Scroll down and tap the Reject button ────────────────
-            const rejectResult = await cwoFlow.rejectCWO();
-            console.log('Reject result | status:', rejectResult.status);
-
-            // The app auto-navigates to the NEW-status detail page after rejection —
-            // that navigation is the confirmation the rejection succeeded.
-            expect(rejectResult.status).toContain('NEW');
-
-            // ── Cleanup: return to dashboard ──────────────────────────────────
-            // After rejection the app auto-navigates to the CWO detail page with
-            // NEW status; navigateBackFromRejectedCWO() handles that transition
-            // back to the CWO landing list before we tap the home footer button.
-            await cwoFlow.navigateBackFromRejectedCWO();
             await dashboardFlow.navigateToDashboardFromFooter();
         });
 

@@ -52,10 +52,32 @@ class PPMDetailPage{
     }
 
     get ppmInfoTechnicianValue(){ return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
-        '.scrollIntoView(new UiSelector().resourceId("ppmAdditionalInformationTab_technician_value"))';
+        '.scrollIntoView(new UiSelector().resourceId("ppmWoAdditionalInformationTab_participants_assignedTechnicians_value"))';
     }
 
     get ppmAttachmentTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Attachments_tab")');}
+
+    get ppmDetailsTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Details_tab")');}
+
+    get ppmRejectButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("ppm_reject_button"))');
+    }
+
+    get ppmRejectReasonInput(){
+        return $('android=new UiSelector().resourceId("reasonToRejectDialog_input_textField_05")');
+    }
+
+    get ppmRejectReasonInputByClass(){
+        return $('android=new UiSelector().className("android.widget.EditText")');
+    }
+
+    get ppmRejectDialogOkButton(){
+        return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").text("OK")');
+    }
+
+    get ppmRejectDialogOkButtonByText(){
+        return $('//android.widget.Button[contains(@content-desc, "OK")]');
+    }
 
     get ppmSignatureCard(){ return $('android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
         '.scrollIntoView(new UiSelector().resourceId("ppm_signature_box"))');
@@ -157,6 +179,36 @@ class PPMDetailPage{
 
     async tapAttachmentsTab(){
         await action.click(this.ppmAttachmentTab);
+    }
+
+    async tapDetailsTab(){
+        await action.click(this.ppmDetailsTab);
+    }
+
+    async tapRejectButton(){
+        await action.click(this.ppmRejectButton);
+    }
+
+    async enterRejectReason(reasonText){
+        try{
+            const input = await this.ppmRejectReasonInput;
+            await action.click(input);
+            await action.type(input, reasonText);
+        }
+        catch(e){
+            console.warn('Primary reject reason selector failed, trying class fallback:', e.message);
+            await action.type(this.ppmRejectReasonInputByClass, reasonText);
+        }
+    }
+
+    async tapRejectDialogOkButton(){
+        try{
+            await action.click(this.ppmRejectDialogOkButton);
+        }
+        catch(e){
+            console.warn('Primary reject dialog OK selector failed, trying XPath fallback:', e.message);
+            await action.click(this.ppmRejectDialogOkButtonByText);
+        }
     }
 
     async isSignatureCardVisible(){

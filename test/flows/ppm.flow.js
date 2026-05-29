@@ -351,6 +351,24 @@ class PPMFlow{
         return technicianName;
     }
 
+    async rejectPPMFromAcknowledgement(reasonText){
+        await browser.pause(3000);
+
+        await ppmDetailsPage.tapDetailsTab();
+        await browser.pause(1000);
+
+        await ppmDetailsPage.tapRejectButton();
+        await browser.pause(2000);
+
+        await ppmDetailsPage.enterRejectReason(reasonText);
+        await ppmDetailsPage.tapRejectDialogOkButton();
+
+        await browser.pause(6000);
+
+        const status = await ppmDetailsPage.getPPMStatusFromHeader();
+        return { status };
+    }
+
     async uploadImageFromAttachmentsTab(){
         await ppmDetailsPage.tapAttachmentsTab();
         await browser.pause(2000);
