@@ -21,6 +21,9 @@ logs/
 *.apk
 *.aab
 
+# ── UI test runner scripts (per-developer tooling) ────────────────────────────
+scripts/
+
 # ── Per-developer local configs (cause merge conflicts — keep out of git) ──────
 .claude/settings.local.json
 .vscode/
