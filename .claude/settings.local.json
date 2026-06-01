@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(node -e \"const d = require\\('./test/fixtures/login.data'\\); console.log\\(JSON.stringify\\(d\\)\\);\")",
-      "Bash(node -e \"const d = require\\('./test/fixtures/cwo.data'\\); console.log\\(JSON.stringify\\(d, null, 2\\)\\);\")"
+      "Bash(node -e \"const d = require\\('./test/fixtures/cwo.data'\\); console.log\\(JSON.stringify\\(d, null, 2\\)\\);\")",
+      "Bash(diff /tmp/wdio-ours.js /tmp/wdio-theirs.js 2>&1)",
+      "Read(//tmp/**)"
     ]
   }
 }

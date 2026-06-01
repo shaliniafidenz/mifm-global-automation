@@ -275,6 +275,31 @@ class PPMFlow{
         };
     }
 
+    async createPPMAndMoveToInProgress(){
+        const createdPPM = await this.createPPM();
+
+        const supervisorName = await this.assignSupervisorToPendingPPM();
+        const supervisorAssignmentStatus = await ppmDetailsPage.getPPMStatusFromHeader();
+
+        const technicianName = await this.assignTechnicianToInProgressPPM();
+        const technicianAssignmentStatus = await ppmDetailsPage.getPPMStatusFromHeader();
+
+        const acknowledgement = await this.acknowledgePPM();
+
+        return {
+            createdPPM,
+            supervisorAssignment: {
+                supervisorName,
+                status: supervisorAssignmentStatus
+            },
+            technicianAssignment: {
+                technicianName,
+                status: technicianAssignmentStatus
+            },
+            acknowledgement
+        };
+    }
+
     async getNameByRoleFromPPMInfoTab(role){
 
         let username = null;
@@ -324,6 +349,24 @@ class PPMFlow{
         await browser.pause(3000);
 
         return technicianName;
+    }
+
+    async rejectPPMFromAcknowledgement(reasonText){
+        await browser.pause(3000);
+
+        await ppmDetailsPage.tapDetailsTab();
+        await browser.pause(1000);
+
+        await ppmDetailsPage.tapRejectButton();
+        await browser.pause(2000);
+
+        await ppmDetailsPage.enterRejectReason(reasonText);
+        await ppmDetailsPage.tapRejectDialogOkButton();
+
+        await browser.pause(6000);
+
+        const status = await ppmDetailsPage.getPPMStatusFromHeader();
+        return { status };
     }
 
     async uploadImageFromAttachmentsTab(){

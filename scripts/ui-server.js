@@ -150,7 +150,7 @@ const server = http.createServer(function (req, res) {
 
     if (method === 'GET' && pathname === '/api/suites') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify(SUITES));
+        res.end(JSON.stringify({ suites: SUITES, groups: {} }));
         return;
     }
 

@@ -52,6 +52,10 @@ class CWODetailPage{
 
     get cwoAttachmentTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Attachments_tab")');}
 
+    // Details (first) tab — only present when the user is NOT on the Details tab.
+    // Active form "navigationItemActive_Details_tab" confirmed in cwoDetailView.page.js.
+    get cwoDetailsTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Details_tab")');}
+
     get cwoSignatureCard(){ return $('android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
         '.scrollIntoView(new UiSelector().resourceId("displaySignatureBox_tap_gesture_05"))'); 
     }
@@ -64,9 +68,31 @@ class CWODetailPage{
         '.scrollIntoView(new UiSelector().resourceId("cwo_acknowledge_button"))');
     }
 
-    // Reject button — visible on Assignment-status CWOs; requires scrolling to reach
+    // Reject button — visible on Assignment/Acknowledgement-status CWOs; requires scrolling to reach
     get cwoRejectButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
         '.scrollIntoView(new UiSelector().resourceId("cwo_reject_button"))');
+    }
+
+    // Text input inside the reject reason popup dialog (appears when rejecting from ACKNOWLEDGMENT stage).
+    // ⚠ Resource ID unconfirmed — verify with UIAutomator Viewer while dialog is open.
+    get cwoRejectReasonInput(){
+        return $('android=new UiSelector().resourceId("reasonToRejectDialog_input_textField_05")');
+    }
+
+    // Fallback: class-based match if no resource ID is assigned to the EditText
+    get cwoRejectReasonInputByClass(){
+        return $('android=new UiSelector().className("android.widget.EditText")');
+    }
+
+    // OK button in the reject reason dialog.
+    // ⚠ Resource ID unconfirmed — verify with UIAutomator Viewer while dialog is open.
+    get cwoRejectDialogOkButton(){
+        return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").text("OK")');
+    }
+
+    // Fallback: XPath content-desc match (same technique as header.page.js logoutPromptOkButton)
+    get cwoRejectDialogOkButtonByText(){
+        return $('//android.widget.Button[contains(@content-desc, "OK")]');
     }
 
     // App-bar Back button on the CWO detail screen (android.widget.Button, content-desc="Back").
@@ -224,6 +250,44 @@ class CWODetailPage{
         }
         catch(e){
             return false;
+        }
+    }
+
+    // Returns true when the status chip in the app bar shows "ASSIGNMENT".
+    // Used after rejecting from ACKNOWLEDGMENT stage.
+    async isAssignmentStatusVisible(){
+        try{
+            const desc = await action.getContentDescription(this.cwoStatus);
+            return desc.includes('ASSIGNMENT');
+        }
+        catch(e){
+            return false;
+        }
+    }
+
+    async tapDetailsTab(){
+        await action.click(this.cwoDetailsTab);
+    }
+
+    async enterRejectReason(reasonText){
+        try{
+            const reasonInputBox = await this.cwoRejectReasonInput;
+            await action.click(reasonInputBox); // Ensure the input is focused before typing
+            await action.type(reasonInputBox, reasonText);
+        }
+        catch(e){
+            console.warn('Primary reject reason selector failed, trying class fallback:', e.message);
+            await action.type(this.cwoRejectReasonInputByClass, reasonText);
+        }
+    }
+
+    async tapRejectDialogOkButton(){
+        try{
+            await action.click(this.cwoRejectDialogOkButton);
+        }
+        catch(e){
+            console.warn('Primary reject dialog OK selector failed, trying XPath fallback:', e.message);
+            await action.click(this.cwoRejectDialogOkButtonByText);
         }
     }
 

@@ -193,6 +193,40 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .tree::-webkit-scrollbar{width:5px}
 .tree::-webkit-scrollbar-thumb{background:#444;border-radius:3px}
 
+/* ── Folder level ── */
+.folder-group{margin-bottom:4px}
+
+.folder-row{
+  display:flex;align-items:center;
+  border-radius:4px;
+}
+.folder-row:hover{background:rgba(255,255,255,.06)}
+
+.folder-expand{
+  display:flex;align-items:center;gap:4px;
+  flex:1;min-width:0;
+  padding:6px 4px 6px 2px;
+  cursor:pointer;user-select:none;
+}
+
+.folder-name{
+  font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.06em;
+  color:var(--dim);
+  flex:1;min-width:0;
+}
+
+.folder-children{display:none;padding-left:8px}
+.folder-children.open{display:block}
+
+.folder-status{
+  width:14px;height:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;
+}
+.folder-status.pass{color:var(--green)}
+.folder-status.fail{color:var(--red)}
+
 /* Each suite occupies a "group" */
 .suite-group{margin-bottom:1px}
 
@@ -592,8 +626,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 </div>
 
 <script>
-var suites     = {};
+var suites       = {};
+var groups       = {};       // { Regression: ['CWO','PPM'], Other: ['Login'] }
 var expanded     = {};       // { suiteName: boolean }
+var folderExpanded = {};     // { folderName: boolean } — default open (undefined = open)
 var descExpanded = {};       // { 'suiteName-descIdx': boolean }
 var testStatus   = {};       // { suiteName: { tcId: 'idle'|'running'|'pass'|'fail' } }
 var running    = false;
@@ -696,7 +732,8 @@ var resultsFilter      = 'all';
 // ── Boot ─────────────────────────────────────────────────────────────────────
 
 fetch('/api/suites').then(function(r){ return r.json(); }).then(function(data){
-    suites = data;
+    suites = data.suites;
+    groups = data.groups;
     buildTcIndex();
     renderTree();
     // Reconnect if a run was already in progress (e.g. page refresh)
@@ -804,43 +841,158 @@ function refreshDevices() {
 
 // ── Tree render ───────────────────────────────────────────────────────────────
 
+function getTestsFromDescFiltered(desc, allowedIds) {
+    var result = [];
+    desc.tests.forEach(function(t) { if (allowedIds.indexOf(t.id) >= 0) result.push(t); });
+    if (desc.describes) desc.describes.forEach(function(d) {
+        getTestsFromDescFiltered(d, allowedIds).forEach(function(t) { result.push(t); });
+    });
+    return result;
+}
+
+function renderDescNodeFiltered(desc, suiteName, path, dis, allowedIds) {
+    var matchingTests = desc.tests.filter(function(t) { return allowedIds.indexOf(t.id) >= 0; });
+    var matchingSubs  = (desc.describes || []).filter(function(d) {
+        return getTestsFromDescFiltered(d, allowedIds).length > 0;
+    });
+    if (matchingTests.length === 0 && matchingSubs.length === 0) return '';
+
+    var dKey  = suiteName + '-' + path.join('-');
+    var dOpen = !!descExpanded[dKey];
+    var total = matchingTests.length + matchingSubs.reduce(function(n, d) {
+        return n + getTestsFromDescFiltered(d, allowedIds).length;
+    }, 0);
+
+    var html = '<div class="desc-row">';
+    html += '<div class="desc-expand" onclick=\'toggleDescExpand('
+        + JSON.stringify(suiteName) + ',' + JSON.stringify(path) + ')\'>';
+    html += '<span class="chevron' + (dOpen ? ' open' : '') + '">' + icoChevron() + '</span>';
+    html += icoDesc();
+    html += '<span class="desc-name">' + escHtml(desc.name) + '</span>';
+    html += '<span class="badge">' + total + '</span>';
+    html += '<span class="desc-status" id="ds-' + dKey + '">'
+        + descStatusHtml(suiteName, path) + '</span>';
+    html += '</div>';
+    var descTcIds = getTestsFromDescFiltered(desc, allowedIds).map(function(t) { return t.id; });
+    html += '<button class="suite-run-btn" title="Run ' + escHtml(desc.name) + '"'
+        + dis + ' onclick=\'startRun({suite:' + JSON.stringify(suiteName)
+        + ',tests:' + JSON.stringify(descTcIds) + '})\'>'
+        + icoPlay(11) + '</button>';
+    html += '</div>';
+
+    html += '<div class="test-children desc-tests' + (dOpen ? ' open' : '') + '">';
+    matchingSubs.forEach(function(sub) {
+        var subIdx = desc.describes.indexOf(sub);
+        html += renderDescNodeFiltered(sub, suiteName, path.concat([subIdx]), dis, allowedIds);
+    });
+    matchingTests.forEach(function(t) { html += renderTestRow(t, suiteName, dis); });
+    html += '</div>';
+
+    return html;
+}
+
+function renderSuiteGroupFiltered(name, allowedIds, dis) {
+    var suite  = suites[name];
+    if (!suite) return '';
+    var isOpen = !!expanded[name];
+
+    var html = '<div class="suite-group">';
+    html += '<div class="suite-row">';
+    html += '<div class="suite-expand" onclick=\'toggleExpand(' + JSON.stringify(name) + ')\'>';
+    html += '<span class="chevron' + (isOpen ? ' open' : '') + '">' + icoChevron() + '</span>';
+    html += icoFile();
+    html += '<span class="suite-name">' + name + '</span>';
+    html += '<span class="badge">' + allowedIds.length + '</span>';
+    html += '<span class="suite-status" id="ss-' + name + '">' + suiteStatusHtml(name) + '</span>';
+    html += '</div>';
+    html += '<button class="suite-run-btn" title="Run all ' + name + ' tests"'
+        + dis + ' onclick=\'startRun({suite:' + JSON.stringify(name)
+        + ',tests:' + JSON.stringify(allowedIds) + '})\'>'
+        + icoPlay(11) + '</button>';
+    html += '</div>';
+
+    html += '<div class="test-children' + (isOpen ? ' open' : '') + '">';
+    suite.describes.forEach(function(desc, di) {
+        html += renderDescNodeFiltered(desc, name, [di], dis, allowedIds);
+    });
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+}
+
+function renderSuiteNode(name, dis) {
+    var suite  = suites[name];
+    if (!suite) return '';
+    var isOpen = !!expanded[name];
+    var tests  = getAllTests(name);
+
+    var html = '<div class="suite-group">';
+    html += '<div class="suite-row">';
+    html += '<div class="suite-expand" onclick=\'toggleExpand(' + JSON.stringify(name) + ')\'>';
+    html += '<span class="chevron' + (isOpen ? ' open' : '') + '">' + icoChevron() + '</span>';
+    html += icoFile();
+    html += '<span class="suite-name">' + name + '</span>';
+    html += '<span class="badge">' + tests.length + '</span>';
+    html += '<span class="suite-status" id="ss-' + name + '">' + suiteStatusHtml(name) + '</span>';
+    html += '</div>';
+    html += '<button class="suite-run-btn" title="Run all ' + name + ' tests"'
+        + dis + ' onclick=\'runSuite(' + JSON.stringify(name) + ')\'>'
+        + icoPlay(11) + '</button>';
+    html += '</div>';
+
+    html += '<div class="test-children' + (isOpen ? ' open' : '') + '">';
+    suite.describes.forEach(function(desc, di) {
+        html += renderDescNode(desc, name, [di], dis);
+    });
+    html += '</div>';
+
+    html += '</div>';
+    return html;
+}
+
 function renderTree() {
     var dis  = running ? ' disabled' : '';
     var html = '';
 
-    Object.keys(suites).forEach(function(name) {
-        var suite  = suites[name];
-        var isOpen = !!expanded[name];
-        var total  = getAllTests(name).length;
+    if (groups && Object.keys(groups).length > 0) {
+        // Folder/group mode — render test cases grouped by tag
+        Object.keys(groups).forEach(function(folderName) {
+            var folderSuites = groups[folderName]; // { suiteName: [tcIds] }
+            var isOpen = folderExpanded[folderName] !== false;
+            var total  = Object.keys(folderSuites).reduce(function(n, s) {
+                return n + folderSuites[s].length;
+            }, 0);
 
-        html += '<div class="suite-group">';
-        html += '<div class="suite-row">';
+            html += '<div class="folder-group">';
+            html += '<div class="folder-row">';
+            html += '<div class="folder-expand" onclick=\'toggleFolder(' + JSON.stringify(folderName) + ')\'>';
+            html += '<span class="chevron' + (isOpen ? ' open' : '') + '">' + icoChevron() + '</span>';
+            html += icoFolder();
+            html += '<span class="folder-name">' + escHtml(folderName) + '</span>';
+            html += '<span class="badge">' + total + '</span>';
+            html += '<span class="folder-status" id="fs-' + folderName + '">'
+                + folderStatusHtml(folderName) + '</span>';
+            html += '</div>';
+            html += '<button class="suite-run-btn" title="Run all ' + escHtml(folderName) + '"'
+                + dis + ' onclick=\'runGroup(' + JSON.stringify(folderName) + ')\'>'
+                + icoPlay(11) + '</button>';
+            html += '</div>';
 
-        // Expand zone: chevron + file icon + name + badge + suite status
-        html += '<div class="suite-expand" onclick=\'toggleExpand(' + JSON.stringify(name) + ')\'>';
-        html += '<span class="chevron' + (isOpen ? ' open' : '') + '">' + icoChevron() + '</span>';
-        html += icoFile();
-        html += '<span class="suite-name">' + name + '</span>';
-        html += '<span class="badge">' + total + '</span>';
-        html += '<span class="suite-status" id="ss-' + name + '">' + suiteStatusHtml(name) + '</span>';
-        html += '</div>';
+            html += '<div class="folder-children' + (isOpen ? ' open' : '') + '">';
+            Object.keys(folderSuites).forEach(function(name) {
+                html += renderSuiteGroupFiltered(name, folderSuites[name], dis);
+            });
+            html += '</div>';
 
-        // Suite play button
-        html += '<button class="suite-run-btn" title="Run all ' + name + ' tests"'
-            + dis + ' onclick=\'runSuite(' + JSON.stringify(name) + ')\'>'
-            + icoPlay(11) + '</button>';
-
-        html += '</div>'; // .suite-row
-
-        // Describe children (recursive)
-        html += '<div class="test-children' + (isOpen ? ' open' : '') + '">';
-        suite.describes.forEach(function(desc, di) {
-            html += renderDescNode(desc, name, [di], dis);
+            html += '</div>';
         });
-        html += '</div>'; // .test-children (suite)
-
-        html += '</div>'; // .suite-group
-    });
+    } else {
+        // Flat mode — render all suites directly (no grouping)
+        Object.keys(suites).forEach(function(name) {
+            html += renderSuiteNode(name, dis);
+        });
+    }
 
     document.getElementById('tree').innerHTML = html;
 }
@@ -922,6 +1074,23 @@ function suiteStatusHtml(name) {
     return '';
 }
 
+function folderStatusHtml(folderName) {
+    var folderSuites = groups[folderName] || {};
+    var hasRunning = false, hasFail = false, hasPass = false;
+    Object.keys(folderSuites).forEach(function(sName) {
+        folderSuites[sName].forEach(function(id) {
+            var s = testStatus[sName] && testStatus[sName][id];
+            if (s === 'running') hasRunning = true;
+            if (s === 'fail')    hasFail    = true;
+            if (s === 'pass')    hasPass    = true;
+        });
+    });
+    if (hasRunning) return '<span class="spinner"></span>';
+    if (hasFail)    return '<span class="folder-status fail">&#10007;</span>';
+    if (hasPass)    return '<span class="folder-status pass">&#10003;</span>';
+    return '';
+}
+
 function descStatusHtml(sName, path) {
     var desc  = getDescByPath(sName, path);
     if (!desc) return '';
@@ -953,6 +1122,13 @@ function resetStatus(payload) {
     if (payload.suite === 'all') {
         Object.keys(suites).forEach(function(name) {
             getAllTests(name).forEach(function(t) { testStatus[name][t.id] = 'running'; });
+        });
+    } else if (groups[payload.suite]) {
+        var folderSuites = groups[payload.suite];
+        Object.keys(folderSuites).forEach(function(sName) {
+            folderSuites[sName].forEach(function(id) {
+                if (testStatus[sName]) testStatus[sName][id] = 'running';
+            });
         });
     } else {
         var s = suites[payload.suite];
@@ -996,6 +1172,11 @@ function updateStatusIcons() {
         // Describe icons (recursive)
         var s = suites[name];
         if (s) updateDescIcons(name, s.describes, []);
+    });
+    // Folder icons
+    Object.keys(groups).forEach(function(folderName) {
+        var fel = document.getElementById('fs-' + folderName);
+        if (fel) fel.innerHTML = folderStatusHtml(folderName);
     });
 }
 
@@ -1044,6 +1225,11 @@ function parseForResults(raw) {
 
 // ── Expand / collapse ─────────────────────────────────────────────────────────
 
+function toggleFolder(name) {
+    folderExpanded[name] = !(folderExpanded[name] !== false);
+    renderTree();
+}
+
 function toggleExpand(name) {
     expanded[name] = !expanded[name];
     renderTree();
@@ -1064,6 +1250,10 @@ function runDescribe(suiteName, path) {
     if (!desc) return;
     var tests = getTestsFromDesc(desc);
     startRun({ suite: suiteName, tests: tests.map(function(t) { return t.id; }) });
+}
+
+function runGroup(groupName) {
+    startRun({ suite: groupName, tests: [] });
 }
 
 function runAll() {
@@ -1558,6 +1748,9 @@ function icoFile() {
 }
 function icoDesc() {
     return '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9988cc" stroke-width="1.8" style="flex-shrink:0;margin-right:2px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+}
+function icoFolder() {
+    return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--dim);margin-right:2px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
 }
 function icoPlay(size) {
     return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21"/></svg>';

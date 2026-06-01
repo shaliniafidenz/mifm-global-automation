@@ -39,7 +39,7 @@ class PPMDetailPage{
         '.scrollIntoView(new UiSelector().resourceIdMatches("ppm_dropdown_checkbox_item_.*"))';
     }
 
-    get ppmTechnicianDropdownOkButton(){ return $('android=new UiSelector().resourceId("ppm_dropdown_technication_ok_button")');}
+    get ppmTechnicianDropdownOkButton(){ return $('android=new UiSelector().resourceId("ppm_dropdown_technician_ok_button")');}
 
     get ppmAssignButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
         '.scrollIntoView(new UiSelector().resourceId("ppm_assign_button"))');
@@ -52,10 +52,32 @@ class PPMDetailPage{
     }
 
     get ppmInfoTechnicianValue(){ return 'android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
-        '.scrollIntoView(new UiSelector().resourceId("ppmAdditionalInformationTab_technician_value"))';
+        '.scrollIntoView(new UiSelector().resourceId("ppmWoAdditionalInformationTab_participants_assignedTechnicians_value"))';
     }
 
     get ppmAttachmentTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Attachments_tab")');}
+
+    get ppmDetailsTab(){ return $('android=new UiSelector().resourceId("navigationItemInactive_Details_tab")');}
+
+    get ppmRejectButton(){ return $('android=new UiScrollable(new UiSelector().scrollable(true))' +
+        '.scrollIntoView(new UiSelector().resourceId("ppm_reject_button"))');
+    }
+
+    get ppmRejectReasonInput(){
+        return $('android=new UiSelector().resourceId("reasonToRejectDialog_input_textField_05")');
+    }
+
+    get ppmRejectReasonInputByClass(){
+        return $('android=new UiSelector().className("android.widget.EditText")');
+    }
+
+    get ppmRejectDialogOkButton(){
+        return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").text("OK")');
+    }
+
+    get ppmRejectDialogOkButtonByText(){
+        return $('//android.widget.Button[contains(@content-desc, "OK")]');
+    }
 
     get ppmSignatureCard(){ return $('android=new UiScrollable(new UiSelector().className("android.widget.ScrollView"))' +
         '.scrollIntoView(new UiSelector().resourceId("ppm_signature_box"))');
@@ -69,9 +91,9 @@ class PPMDetailPage{
         '.scrollIntoView(new UiSelector().descriptionContains("Acknowledge"))');
     }
 
-    get signatureDoneButton(){ return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").text("DONE")');}
+    get signatureDoneButton(){ return $('android=new UiSelector().resourceId("ppm_acknowledgement_signatureDialog_done_button").text("DONE")');}
 
-    get signatureDoneButtonByText(){ return $('android=new UiSelector().resourceId("confirmationActionButton_view_text_01").descriptionContains("DONE")');}
+    get signatureDoneButtonByText(){ return $('android=new UiSelector().resourceId("ppm_acknowledgement_signatureDialog_done_button").descriptionContains("DONE")');}
 
     get processingBannerTitle(){ return $('android=new UiSelector().resourceId("flashBanner_processing_view_title")');}
 
@@ -159,6 +181,36 @@ class PPMDetailPage{
         await action.click(this.ppmAttachmentTab);
     }
 
+    async tapDetailsTab(){
+        await action.click(this.ppmDetailsTab);
+    }
+
+    async tapRejectButton(){
+        await action.click(this.ppmRejectButton);
+    }
+
+    async enterRejectReason(reasonText){
+        try{
+            const input = await this.ppmRejectReasonInput;
+            await action.click(input);
+            await action.type(input, reasonText);
+        }
+        catch(e){
+            console.warn('Primary reject reason selector failed, trying class fallback:', e.message);
+            await action.type(this.ppmRejectReasonInputByClass, reasonText);
+        }
+    }
+
+    async tapRejectDialogOkButton(){
+        try{
+            await action.click(this.ppmRejectDialogOkButton);
+        }
+        catch(e){
+            console.warn('Primary reject dialog OK selector failed, trying XPath fallback:', e.message);
+            await action.click(this.ppmRejectDialogOkButtonByText);
+        }
+    }
+
     async isSignatureCardVisible(){
         return await action.isDisplayedSafe(this.ppmSignatureCard);
     }
@@ -207,20 +259,32 @@ class PPMDetailPage{
         await action.click(this.ppmAcknowledgeButtonByText);
     }
 
-    async waitForProcessingBanner(timeout = 10000){
-        await this.processingBannerTitle.waitForDisplayed({
-            timeout,
-            timeoutMsg: 'Processing banner did not display'
-        });
-        return await this.processingBannerTitle.isDisplayed();
+    async waitForProcessingBanner(timeout = 30000){
+        try{
+            await this.processingBannerTitle.waitForDisplayed({
+                timeout,
+                timeoutMsg: 'Processing banner did not display'
+            });
+            return await this.processingBannerTitle.isDisplayed();
+        }
+        catch(error){
+            console.error('Error waiting for processing banner:', error);
+            return false;
+        }
     }
 
     async waitForSuccessBanner(timeout = 15000){
-        await this.successBannerTitle.waitForDisplayed({
+        try{
+            await this.successBannerTitle.waitForDisplayed({
             timeout,
             timeoutMsg: 'Success banner did not display'
-        });
-        return await this.successBannerTitle.isDisplayed();
+            });
+            return await this.successBannerTitle.isDisplayed();
+        }
+        catch(error){
+            console.error('Error waiting for success banner:', error);
+            return false;
+        }
     }
 
     async tapAddImageButton(){

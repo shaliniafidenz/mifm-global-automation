@@ -379,6 +379,23 @@ class CWOFlow{
             }
     }
 
+    async createCWOAndMoveToInProgress(){
+        const createdCWO = await this.createCWO();
+
+        const supervisorAssignment = await this.assignSupervisorToNewCWO();
+
+        const technicianAssignment = await this.assignTechnicianToAssignmentCWO();
+
+        const acknowledgement = await this.acknowledgeCWO();
+
+        return {
+            createdCWO,
+            supervisorAssignment,
+            technicianAssignment,
+            acknowledgement
+        };
+    }
+
     async assignSupervisorToNewCWO(){
         //Find the Supervisor element and apply filters to load supervisors in the dropdown, then select a random supervisor from the list and assign to the CWO
         await cwoDetailsPage.tapSelectAllFilter();
@@ -435,7 +452,6 @@ class CWOFlow{
         // content-desc format: "<resource-id>\n<display-value>"
         // e.g. "cwoAdditionalInformationTab_supervisor_value\nWei Kang Lee"
         username = rawDesc.split('\n')[1];
-        console.log(`Fetched name for role: ${role} is: "${username}"`);
         return username;
 
     }
@@ -606,10 +622,40 @@ class CWOFlow{
         return {technicianName, status};
     }
 
-    
+    /**
+     * Rejects a CWO that is currently at ACKNOWLEDGMENT stage.
+     * Unlike rejectCWO() (ASSIGNMENT → NEW, no dialog), this handles the
+     * popup that appears when rejecting from ACKNOWLEDGMENT stage, enters a
+     * reason, and confirms with OK.
+     *
+     * Expected outcome: status transitions to ASSIGNMENT.
+     *
+     * @param {string} reasonText  The rejection reason to type into the dialog.
+     * @returns {{ status: string }}
+     */
+    async rejectCWOFromAcknowledgement(reasonText){
+        await browser.pause(3000); // allow detail screen to render
 
-    
+        // Navigate back to Details tab (user arrived here after reading Info tab)
+        await cwoDetailsPage.tapDetailsTab();
+        await browser.pause(1000);
+
+        // UiScrollable in the getter scrolls down to the button automatically
+        await cwoDetailsPage.tapRejectButton();
+        await browser.pause(2000); // wait for reject reason dialog to appear
+
+        // Enter reason, dismiss keyboard, then confirm
+        await cwoDetailsPage.enterRejectReason(reasonText);
+       // await driver.hideKeyboard();
+       // await browser.pause(500);
+        await cwoDetailsPage.tapRejectDialogOkButton();
+
+        await browser.pause(6000); // wait for status to settle
+
+        const status = await cwoDetailsPage.getCWOStatusFromHeader();
+        return { status };
+    }
 
 }
 
-module.exports = new CWOFlow();    
+module.exports = new CWOFlow();
