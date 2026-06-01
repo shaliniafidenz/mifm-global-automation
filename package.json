@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "wdio": "wdio run ./wdio.conf.js",
     "clean-allure": "rimraf reports/allure-results reports/allure-report reports/.allure",
-    "allure-generate": "npx allure generate --clean --output reports/allure-report reports/allure-results",
+    "allure-generate": "npx allure generate reports/allure-results --output reports/allure-report",
     "allure-open": "npx allure open reports/allure-report",
     "allure": "npm run allure-generate && npm run allure-open",
     "wdio-with-report": "npm run clean-allure && wdio run ./wdio.conf.js && npm run allure",
