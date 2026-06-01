@@ -1,8 +1,31 @@
-node_modules
-reports
-allure-report
-allure-results
-logs
-screenshots
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+
+# ── Test reports & generated results ──────────────────────────────────────────
+reports/
+allure-report/
+allure-results/
+
+# ── Temp files generated at runtime ───────────────────────────────────────────
+.wdio_ui_tmp.js
+run/
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Environment & secrets ─────────────────────────────────────────────────────
 .env
+
+# ── App binaries ──────────────────────────────────────────────────────────────
 *.apk
+*.aab
+
+# ── Per-developer local configs (cause merge conflicts — keep out of git) ──────
+.claude/settings.local.json
+.vscode/
+
+# ── OS artefacts ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini

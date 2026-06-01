@@ -286,8 +286,9 @@ const server = http.createServer(function (req, res) {
         }
         reportGenerating = true;
         const rproc = spawn('npm', ['run', 'allure-generate'], { cwd: ROOT, shell: true });
-        let rErr = '';
-        rproc.stderr.on('data', function (d) { rErr += d; });
+        let rOut = '';
+        rproc.stdout.on('data', function (d) { rOut += d; });
+        rproc.stderr.on('data', function (d) { rOut += d; });
         rproc.on('error', function (err) {
             reportGenerating = false;
             res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -297,7 +298,7 @@ const server = http.createServer(function (req, res) {
             reportGenerating = false;
             if (code !== 0) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: rErr || 'allure generate failed (exit ' + code + ')' }));
+                res.end(JSON.stringify({ error: rOut.trim() || 'allure generate failed (exit ' + code + ')' }));
             } else {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true, url: '/report/' }));
