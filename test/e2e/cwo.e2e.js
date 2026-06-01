@@ -187,6 +187,43 @@ describe('CWO E2E Tests', () => {
 
     });
 
+    describe('Attachment Verification', () => {
+
+        it('TC_CWO_017: Find a closed CWO with attachments, open it, and verify the attachment can be viewed', async () => {
+            allure.addFeature('CWO');
+            allure.addSeverity('Normal');
+            allure.addTag('regression');
+
+            // ── Step 1: Navigate to CWO list ────────────────────────────────────
+            await cwoFlow.navigateToCWOFromBottomNav();
+
+            // ── Step 2: Apply "All" filter so closed CWOs are visible ────────────
+            await cwoFlow.getAllCWOs();
+
+            // ── Step 3: Horizontal-scroll to Closed card and tap it ──────────────
+            await cwoLandingPage.tapClosedCard();
+
+            // ── Step 4: Iterate closed list — find first CWO that has attachments ─
+            // The flow logs each CWO it checks and stops as soon as it finds one
+            // with at least one attachment, leaving the attachment image view open.
+            const result = await cwoFlow.findCWOWithAttachmentsInClosedTab();
+
+            console.log(`\n[TC_CWO_017] Result → found: ${result.found}, CWO: ${result.cwoNumber}, attachments: ${result.attachmentCount}`);
+
+            // ── Step 5: Assert we found at least one CWO with attachments ────────
+            expect(result.found).toBe(true);
+            expect(result.attachmentCount).toBeGreaterThan(0);
+
+            // ── Cleanup: close attachment viewer → CWO detail → dashboard ────────
+            await commonPage.tapBack(); // close attachment image viewer
+            await browser.pause(1000);
+            await commonPage.tapBack(); // back to closed CWO list
+            await browser.pause(1000);
+            await dashboardFlow.navigateToDashboardFromRightDrawer();
+        });
+
+    });
+
     describe('Assignment & Workflow', () => {
 
         it.skip('TC_CWO_011: Assign a Supervisor to a NEW CWO', async () => {

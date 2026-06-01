@@ -106,6 +106,11 @@ class CWODetailPage{
         return $('android=new UiSelector().resourceId("attachmentItem_tap_inkwell_09")');
     }
 
+    // Matches all attachment items regardless of index suffix (e.g. _01, _09)
+    get attachmentItemsSelector(){
+        return 'android=new UiSelector().resourceIdMatches(".*attachmentItem_tap_inkwell.*")';
+    }
+
     get cwoImageNameFromImageHeader(){
         return $('android=new UiSelector().resourceId("generalAppBar_view_text_01")');
     }

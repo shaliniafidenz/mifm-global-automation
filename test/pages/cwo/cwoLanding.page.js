@@ -48,12 +48,19 @@ class CWOLandingPage{
         '.scrollIntoView(new UiSelector().resourceId("cwo_completed_card"))'
     )}
 
+    get closedCard(){ return $(
+        'android=new UiScrollable(new UiSelector().className("android.widget.HorizontalScrollView"))' +
+        '.setAsHorizontalList()' +
+        '.scrollIntoView(new UiSelector().resourceId("cwo_closed_card"))'
+    )}
+
     //Fast — single lookup, used for list visibility check
     get newWOFirstListItem()             { return $('android=new UiSelector().resourceId("cwo_new_list_item_01")'); }
     get assignmentWOFirstListItem()      { return $('android=new UiSelector().resourceId("cwo_assignment_list_item_01")'); }
     get acknowledgementWOFirstListItem() { return $('android=new UiSelector().resourceId("cwo_acknowledgement_list_item_01")'); }
     get inProgressWOFirstListItem()      { return $('android=new UiSelector().resourceId("cwo_inprogress_list_item_01")'); }
     get completedWOFirstListItem()       { return $('android=new UiSelector().resourceId("cwo_completed_list_item_01")'); }
+    get closedWOFirstListItem()          { return $('android=new UiSelector().resourceId("cwo_closed_list_item_01")'); }
 
     //Full list — reserved for future test cases that need all items
     get newWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_new_list_item_.*")';}
@@ -61,6 +68,7 @@ class CWOLandingPage{
     get acknowledgementWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_acknowledgement_list_item_.*")';}
     get inProgressWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_inprogress_list_item_.*")';}
     get completedWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_completed_list_item_.*")';}
+    get closedWOListItems(){ return 'android=new UiSelector().resourceIdMatches(".*cwo_closed_list_item_.*")';}
 
     get horizontalScrollContainer() {return $('//android.widget.HorizontalScrollView');}
   
@@ -157,6 +165,17 @@ class CWOLandingPage{
 
     async tapCompletedCard(){
         await action.click(this.completedCard);
+        await browser.pause(3000);
+    }
+
+    async tapClosedCard(){
+        // Closed is the last card (Tab 6 of 6). scrollToEnd drives the
+        // HorizontalScrollView all the way to the right so the Closed card
+        // is definitely on screen, then we click it with a plain resourceId.
+        await $('android=new UiScrollable(new UiSelector().className("android.widget.HorizontalScrollView"))' +
+                '.setAsHorizontalList().scrollToEnd(5)');
+        await browser.pause(800);
+        await action.click($('android=new UiSelector().resourceId("cwo_closed_card")'));
         await browser.pause(3000);
     }
 

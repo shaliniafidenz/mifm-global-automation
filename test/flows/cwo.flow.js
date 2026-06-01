@@ -482,6 +482,107 @@ class CWOFlow{
         await browser.pause(2000); // allow CWO landing page to fully render
     }
 
+    /**
+     * Iterates through the Closed CWO list, checking each work order's Attachments tab.
+     * Logs to console whether attachments are found for each CWO.
+     * On the first CWO that has attachments, opens the first attachment and returns.
+     * Scrolls down up to MAX_SCROLL_ATTEMPTS times when all visible items are exhausted.
+     *
+     * Pre-condition: the Closed tab list must already be visible on screen.
+     * Returns: { found, cwoNumber, attachmentCount }
+     */
+    async findCWOWithAttachmentsInClosedTab() {
+        const MAX_SCROLL_ATTEMPTS = 5;
+        const visitedCWOs = new Set();
+        let scrollAttempts = 0;
+
+        while (true) {
+            const listItems = await $$(cwoLandingPage.closedWOListItems);
+
+            let triedOneThisPass = false;
+
+            for (const item of listItems) {
+                const desc = (await item.getAttribute('content-desc')) || '';
+                const match = desc.match(/(CWO\d+)/);
+                const identifier = match ? match[1] : desc.substring(0, 40);
+
+                if (visitedCWOs.has(identifier)) continue;
+
+                visitedCWOs.add(identifier);
+                triedOneThisPass = true;
+
+                console.log(`[Closed CWO] Checking ${identifier} for attachments...`);
+
+                await action.click(item);
+                await browser.pause(2000);
+
+                await cwoDetailsPage.tapAttachmentsTab();
+                await browser.pause(2000);
+
+                const attachments = await $$(cwoDetailsPage.attachmentItemsSelector);
+                const count = attachments.length;
+
+                if (count > 0) {
+                    console.log(`[Closed CWO] ✔ ${identifier} has ${count} attachment(s) — opening first attachment`);
+                    await action.click(attachments[0]);
+                    await browser.pause(2000);
+                    return { found: true, cwoNumber: identifier, attachmentCount: count };
+                }
+
+                console.log(`[Closed CWO] ✘ ${identifier} has no attachments — going back`);
+                await commonPage.tapBack();
+                await browser.pause(2000);
+
+                // Scroll the list down slightly — this dismisses the floating
+                // Create CWO button (Flutter FAB hides on scroll) so it does not
+                // intercept the next list-item tap
+                const sz = await driver.getWindowSize();
+                await driver.performActions([{
+                    type: 'pointer',
+                    id: 'finger1',
+                    parameters: { pointerType: 'touch' },
+                    actions: [
+                        { type: 'pointerMove', duration: 0,   x: Math.floor(sz.width * 0.5), y: Math.floor(sz.height * 0.55) },
+                        { type: 'pointerDown', button: 0 },
+                        { type: 'pointerMove', duration: 400, x: Math.floor(sz.width * 0.5), y: Math.floor(sz.height * 0.38) },
+                        { type: 'pointerUp',   button: 0 }
+                    ]
+                }]);
+                await driver.releaseActions();
+                await browser.pause(500);
+
+                break; // restart item scan after navigation back
+            }
+
+            if (!triedOneThisPass) {
+                if (scrollAttempts >= MAX_SCROLL_ATTEMPTS) {
+                    console.log('[Closed CWO] Max scroll attempts reached — no CWO with attachments found');
+                    break;
+                }
+
+                scrollAttempts++;
+                console.log(`[Closed CWO] Scrolling down for more items (attempt ${scrollAttempts})...`);
+
+                const size = await driver.getWindowSize();
+                await driver.performActions([{
+                    type: 'pointer',
+                    id: 'finger1',
+                    parameters: { pointerType: 'touch' },
+                    actions: [
+                        { type: 'pointerMove', duration: 0, x: Math.floor(size.width * 0.5), y: Math.floor(size.height * 0.7) },
+                        { type: 'pointerDown', button: 0 },
+                        { type: 'pointerMove', duration: 800, x: Math.floor(size.width * 0.5), y: Math.floor(size.height * 0.3) },
+                        { type: 'pointerUp', button: 0 }
+                    ]
+                }]);
+                await driver.releaseActions();
+                await browser.pause(2000);
+            }
+        }
+
+        return { found: false, cwoNumber: null, attachmentCount: 0 };
+    }
+
     async assignTechnicianToAssignmentCWO(){
 
         //Find the Supervisor element and apply filters to load supervisors in the dropdown, then select a random supervisor from the list and assign to the CWO
