@@ -67,6 +67,10 @@ describe('CWO Filter Tests', () => {
         // Step 2: Verify the Building dropdown is visible (confirms screen fully loaded)
         const isBuildingDisplayed = await cwoFilterPage.isBuildingDropdownDisplayed();
         expect(isBuildingDisplayed).toBe(true);
+
+        // Step 3: Apply empty filter to navigate back to CWO home
+        const cwoTitle = await cwoFilterFlow.applyFilter();
+        expect(cwoTitle).toContain(filterData.expectedCwoTitle);
     });
 
     // ── TC_CWOF_002 ────────────────────────────────────────────────────────────

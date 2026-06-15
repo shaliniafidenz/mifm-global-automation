@@ -1,5 +1,13 @@
 require('dotenv').config();
+const fs = require('fs');
+const path = require('path');
 const env = require('./test/config/env');
+const QAHubReporter = require('./qa-hub-reporter');
+
+function videoPathForTest(title) {
+    const safeName = (title || 'unknown').replace(/[^a-zA-Z0-9_-]+/g, '_');
+    return path.join('videos', `${safeName}.mp4`);
+}
 
 // Fire-and-forget POST to the UI runner's /api/step endpoint.
 // Silently no-ops if the UI runner is not running.
@@ -176,16 +184,26 @@ exports.config = {
     // The only one supported by default is 'dot'
     // see also: https://webdriver.io/docs/dot-reporter
     reporters: [
-        'spec',
-        [
-            'allure',
-            {
-                outputDir: 'reports/allure-results',
-                disableWebdriverStepsReporting: true,
-                disableWebdriverScreenshotsReporting: false,
-            }
-        ]
+    'spec',
+
+    [
+        'allure',
+        {
+            outputDir: 'reports/allure-results',
+            disableWebdriverStepsReporting: true,
+            disableWebdriverScreenshotsReporting: false,
+        }
     ],
+
+    [
+        QAHubReporter,
+        {
+            url: 'https://qahub.fidenz.com',
+            runId: 'af6ae1d5-1b2a-4ae7-abb2-668b1fd75c49',
+            token: 'bf3824b9c3fea2c47226c50bf43a61772e098d9732abaaa78edab5c77700d50a'
+        }
+    ]
+],
 
     // Options to be passed to Mocha.
     // See the full list at http://mochajs.org/
